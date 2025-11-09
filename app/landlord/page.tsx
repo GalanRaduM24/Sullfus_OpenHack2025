@@ -1,218 +1,270 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/contexts/AuthContext'
-import { getUserProfile } from '@/lib/firebase/users'
-import { useProfileVerification } from '@/hooks/useProfileVerification'
+import { getLandlordProfile } from '@/lib/firebase/users'
+import { LandlordProfile } from '@/lib/firebase/users'
+import { isLandlordProfileComplete } from '@/lib/utils/profile-completion'
 import { LandlordProfileForm } from '@/components/profile/LandlordProfileForm'
 import { IDVerificationPrompt } from '@/components/profile/IDVerificationPrompt'
-import { ProfileVerificationCard } from '@/components/profile/ProfileVerificationCard'
+import { BusinessVerificationBadge } from '@/components/profile/BusinessVerificationBadge'
+import { LandlordApplicationsList } from '@/components/applications'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import Link from 'next/link'
-import { Plus, LogIn, AlertCircle, Building2, Users, User } from 'lucide-react'
-
-interface LandlordProfile {
-  role: 'landlord'
-  name: string
-  email: string
-  age?: number
-  description?: string
-  partnerAgencies?: string
-  profileCompleted?: boolean
-  idVerificationStatus?: 'pending' | 'verified' | 'rejected'
-}
+import { Plus, LogIn, CheckCircle, Home, FileText } from 'lucide-react'
 
 export default function LandlordDashboard() {
   const { user, loading } = useAuth()
+  const [profile, setProfile] = useState<LandlordProfile | null>(null)
+  const [profileLoading, setProfileLoading] = useState(true)
   const [showProfileForm, setShowProfileForm] = useState(false)
   const [showIDVerification, setShowIDVerification] = useState(false)
+  const [profileComplete, setProfileComplete] = useState(false)
 
-  // Use the verification hook
-  const {
-    profile,
-    needsProfileCompletion,
-    needsIdVerification,
-    isIdVerified,
-    loading: profileLoading
-  } = useProfileVerification('landlord')
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!user) {
+        setProfileLoading(false)
+        return
+      }
 
-  const handleCompleteProfile = () => {
-    setShowProfileForm(true)
-  }
+      try {
+        const landlordProfile = await getLandlordProfile(user.uid)
+        setProfile(landlordProfile)
+        
+        if (landlordProfile) {
+          const isComplete = isLandlordProfileComplete(landlordProfile)
+          setProfileComplete(isComplete)
+          setShowProfileForm(!isComplete)
+          
+          // Show ID verification after profile is complete (if not already verified)
+          if (isComplete && landlordProfile.idVerificationStatus !== 'verified') {
+            setShowIDVerification(true)
+          }
+        } else {
+          // No profile exists, show form
+          setShowProfileForm(true)
+        }
+      } catch (error) {
+        console.error('Error loading profile:', error)
+      } finally {
+        setProfileLoading(false)
+      }
+    }
 
-  const handleVerifyIdentity = () => {
-    setShowIDVerification(true)
-  }
+    loadProfile()
+  }, [user])
 
   const handleProfileComplete = () => {
     setShowProfileForm(false)
-    // The hook will automatically reload the profile
+    setProfileComplete(true)
+    setShowIDVerification(true)
+    // Reload profile
+    if (user) {
+      getLandlordProfile(user.uid).then(setProfile)
+    }
+  }
+
+  const handleIDVerificationSkip = () => {
+    setShowIDVerification(false)
   }
 
   const handleIDVerificationComplete = () => {
     setShowIDVerification(false)
-    // The hook will automatically reload the verification status
+    // Reload profile
+    if (user) {
+      getLandlordProfile(user.uid).then(setProfile)
+    }
+  }
+
+  const handleUploadProperty = () => {
+    if (!user) {
+      window.location.href = '/auth/signin?returnUrl=/landlord'
+      return
+    }
+    
+    if (!profileComplete) {
+      setShowProfileForm(true)
+      return
+    }
+    
+    // TODO: Open property upload form
+    alert('Property upload form coming soon!')
   }
 
   if (profileLoading || loading) {
     return (
-      <div className="min-h-screen bg-gray-950">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex items-center justify-center min-h-[400px]">
-            <p className="text-gray-400">Loading...</p>
-          </div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <p className="text-muted-foreground">Loading...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-950">
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-7xl mx-auto space-y-6">
-          {/* Header */}
-          <div className="space-y-2">
-            <h1 className="text-3xl font-bold text-white">
-              {user && profile?.name ? `Welcome back, ${profile.name}` : 'Landlord Dashboard'}
-            </h1>
-            <p className="text-gray-400">
-              {user 
-                ? 'Manage your properties and connect with quality tenants.' 
-                : 'Sign in to list your properties and find great tenants.'}
-            </p>
-          </div>          {/* Sign In Prompt */}
-          {!user && !loading && (
-            <Card className="border border-gray-800 bg-gray-900">
-              <CardHeader>
-                <CardTitle className="text-white">Sign in to list properties</CardTitle>
-                <CardDescription className="text-gray-400">
-                  Create an account to upload properties and connect with tenants
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="flex gap-4">
-                <Link href="/auth/signup">
-                  <Button>
-                    <LogIn className="mr-2 h-4 w-4" />
-                    Sign Up
-                  </Button>
-                </Link>
-                <Link href="/auth/signin">
-                  <Button variant="outline" className="border-gray-700 text-gray-300">
-                    Sign In
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-          )}
+    <div className="container mx-auto px-4 py-8">
+      <div className="max-w-6xl mx-auto space-y-8">
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <h1 className="text-4xl font-bold">List Your Property 🏢</h1>
+            {profile?.businessVerificationStatus && (
+              <BusinessVerificationBadge
+                verified={profile.businessVerified || false}
+                status={profile.businessVerificationStatus}
+              />
+            )}
+          </div>
+          <p className="text-muted-foreground text-lg">
+            {user ? `Welcome back${profile?.contactName ? `, ${profile.contactName}` : profile?.name ? `, ${profile.name}` : ''}!` : 'Sign in to list your properties and find great tenants.'}
+          </p>
+        </div>
 
-        {/* Profile Verification Card - Only shows when user needs to complete profile or verify ID */}
-        {user && (needsProfileCompletion || needsIdVerification) && !showProfileForm && !showIDVerification && (
-          <ProfileVerificationCard
-            userRole="landlord"
-            onCompleteProfile={handleCompleteProfile}
-            onVerifyIdentity={handleVerifyIdentity}
-          />
+        {!user && !loading && (
+          <Card className="border-amber-500/50 bg-amber-50/10">
+            <CardHeader>
+              <CardTitle>Sign in to list properties</CardTitle>
+              <CardDescription>
+                Create an account to upload properties and connect with tenants
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex gap-4">
+              <Link href="/auth/signup">
+                <Button>
+                  <LogIn className="mr-2 h-4 w-4" />
+                  Sign Up
+                </Button>
+              </Link>
+              <Link href="/auth/signin">
+                <Button variant="outline">
+                  Sign In
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
         )}
 
         {user && showProfileForm && (
           <LandlordProfileForm
             userId={user.uid}
-            initialData={profile?.role === 'landlord' ? profile : undefined}
+            initialData={profile || undefined}
             onComplete={handleProfileComplete}
           />
         )}
 
-        {user && showIDVerification && (
+        {user && profileComplete && showIDVerification && !showProfileForm && (
           <IDVerificationPrompt
             userId={user.uid}
             userType="landlord"
             onComplete={handleIDVerificationComplete}
-            onSkip={() => setShowIDVerification(false)}
+            onSkip={handleIDVerificationSkip}
           />
         )}
 
-          {/* Quick Actions */}
-          {user && isIdVerified && !showProfileForm && !showIDVerification && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <Link href="/landlord/add-property" className="block">
-                <Card className="border border-gray-800 bg-gray-900 hover:border-gray-700 transition-all cursor-pointer h-full">
+        {user && profileComplete && !showProfileForm && !showIDVerification && (
+          <>
+            {profile?.idVerificationStatus === 'verified' && (
+              <Card className="border-green-500/50 bg-green-50/10">
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-3 text-green-600">
+                    <CheckCircle className="h-6 w-6" />
+                    <p className="font-semibold">Your profile is complete and verified!</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Properties and Applications Tabs */}
+            <Tabs defaultValue="properties" className="w-full">
+              <TabsList className="grid w-full max-w-md grid-cols-2">
+                <TabsTrigger value="properties" className="flex items-center gap-2">
+                  <Home className="h-4 w-4" />
+                  My Properties
+                </TabsTrigger>
+                <TabsTrigger value="applications" className="flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  Applications
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="properties" className="mt-6">
+                <Card>
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-white text-lg">
-                      <Plus className="h-5 w-5" />
-                      Add Property
-                    </CardTitle>
-                    <CardDescription className="text-gray-400">
-                      List a new property
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <CardTitle>My Properties</CardTitle>
+                        <CardDescription>
+                          Manage your property listings
+                        </CardDescription>
+                      </div>
+                      <Button onClick={handleUploadProperty}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add Property
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-center py-12">
+                      <Plus className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
+                      <p className="text-muted-foreground mb-4">
+                        No properties listed yet
+                      </p>
+                      <Button onClick={handleUploadProperty}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        List Your First Property
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="applications" className="mt-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Tenant Applications</CardTitle>
+                    <CardDescription>
+                      View and manage applications from tenants who liked your properties
                     </CardDescription>
                   </CardHeader>
+                  <CardContent>
+                    <LandlordApplicationsList
+                      landlordId={user.uid}
+                      onOpenChat={(applicationId) => {
+                        // TODO: Navigate to chat page
+                        console.log('Open chat for application:', applicationId)
+                        alert('Chat feature coming soon!')
+                      }}
+                    />
+                  </CardContent>
                 </Card>
-              </Link>
+              </TabsContent>
+            </Tabs>
+          </>
+        )}
 
-              <Link href="/landlord/properties" className="block">
-                <Card className="border border-gray-800 bg-gray-900 hover:border-gray-700 transition-all cursor-pointer h-full">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-white text-lg">
-                      <Building2 className="h-5 w-5" />
-                      My Properties
-                    </CardTitle>
-                    <CardDescription className="text-gray-400">
-                      Manage listings
-                    </CardDescription>
-                  </CardHeader>
-                </Card>
-              </Link>
-
-              <Link href="/landlord/profile" className="block">
-                <Card className="border border-gray-800 bg-gray-900 hover:border-gray-700 transition-all cursor-pointer h-full">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-white text-lg">
-                      <User className="h-5 w-5" />
-                      Profile
-                    </CardTitle>
-                    <CardDescription className="text-gray-400">
-                      View your profile
-                    </CardDescription>
-                  </CardHeader>
-                </Card>
-              </Link>
-            </div>
-          )}
-
-          {/* Stats */}
-          {user && isIdVerified && !showProfileForm && !showIDVerification && (
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <Card className="border border-gray-800 bg-gray-900">
-                <CardContent className="pt-6">
-                  <p className="text-gray-400 text-sm">Properties</p>
-                  <p className="text-2xl font-bold text-white mt-1">0</p>
-                </CardContent>
-              </Card>
-
-              <Card className="border border-gray-800 bg-gray-900">
-                <CardContent className="pt-6">
-                  <p className="text-gray-400 text-sm">Views</p>
-                  <p className="text-2xl font-bold text-white mt-1">0</p>
-                </CardContent>
-              </Card>
-
-              <Card className="border border-gray-800 bg-gray-900">
-                <CardContent className="pt-6">
-                  <p className="text-gray-400 text-sm">Inquiries</p>
-                  <p className="text-2xl font-bold text-white mt-1">0</p>
-                </CardContent>
-              </Card>
-
-              <Card className="border border-gray-800 bg-gray-900">
-                <CardContent className="pt-6">
-                  <p className="text-gray-400 text-sm">Active</p>
-                  <p className="text-2xl font-bold text-white mt-1">0</p>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-        </div>
+        {user && !profileComplete && !showProfileForm && (
+          <Card>
+            <CardHeader>
+              <CardTitle>My Properties</CardTitle>
+              <CardDescription>
+                Complete your profile to list properties
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-12">
+                <Plus className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
+                <p className="text-muted-foreground mb-4">
+                  Complete your profile to get started
+                </p>
+                <Button onClick={() => setShowProfileForm(true)}>
+                  Complete Profile
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   )

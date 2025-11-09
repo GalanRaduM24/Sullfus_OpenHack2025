@@ -1,0 +1,15 @@
+{
+  "name": "video-interview-system",
+  "version": "1.0.0",
+  "description": "Enhanced video interview system with Gemini API integration",
+  "dependencies": {
+    "@google/generative-ai": "^0.1.3",
+    "sentiment": "^5.0.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0"
+  },
+  "scripts": {
+    "install-deps": "npm install @google/generative-ai sentiment"
+  }
+}

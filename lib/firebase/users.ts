@@ -10,8 +10,13 @@ import {
   serverTimestamp 
 } from 'firebase/firestore'
 import { db } from './config'
+import type { 
+  User, 
+  TenantProfile as TenantProfileType, 
+  LandlordProfile as LandlordProfileType 
+} from './types'
 
-export type UserRole = 'tenant' | 'landlord'
+export type UserRole = 'tenant' | 'landlord' | 'admin'
 
 export interface BaseUserProfile {
   id: string
@@ -22,22 +27,62 @@ export interface BaseUserProfile {
   updatedAt: any
 }
 
+// Legacy interfaces for backward compatibility
 export interface TenantProfile extends BaseUserProfile {
   role: 'tenant'
-  age: number
-  occupation: string
-  description: string
+  age?: number
+  occupation?: string
+  budgetMin?: number
+  budgetMax?: number
+  preferredLocations?: string[]
+  hasPets?: boolean
+  profilePhotoUrl?: string
+  responsivenessScore?: number
+  verificationStatus?: 'unverified' | 'video_verified' | 'id_verified' | 'interview_verified'
+  introVideoUrl?: string
   profileComplete?: boolean
   idVerificationStatus?: 'not_verified' | 'pending' | 'verified' | 'rejected'
+  // New fields for AI-powered platform
+  seriosityScore?: number
+  seriosityBreakdown?: {
+    id_verified: number
+    income_proof: number
+    interview_clarity: number
+    response_consistency: number
+    responsiveness: number
+    references: number
+  }
+  interviewCompleted?: boolean
+  interviewId?: string
+  documents?: {
+    income_proof?: Array<{
+      url: string
+      uploaded_at: any
+      verified?: boolean
+    }>
+    references?: Array<{
+      url: string
+      uploaded_at: any
+    }>
+  }
 }
 
 export interface LandlordProfile extends BaseUserProfile {
   role: 'landlord'
-  age: number
-  description: string
-  partnerAgencies?: string
+  contactEmail?: string
+  description?: string
+  businessVerified?: boolean
+  profilePhotoUrl?: string
+  rating?: number
   profileComplete?: boolean
   idVerificationStatus?: 'not_verified' | 'pending' | 'verified' | 'rejected'
+  // New fields
+  companyName?: string
+  contactName?: string
+  phone?: string
+  // Business verification fields
+  businessVerificationDocumentUrl?: string
+  businessVerificationStatus?: 'not_verified' | 'pending' | 'verified' | 'rejected'
 }
 
 export type UserProfile = TenantProfile | LandlordProfile

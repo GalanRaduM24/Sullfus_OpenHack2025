@@ -6,6 +6,7 @@ import { initializeApp } from 'firebase/app'
 import { getAuth } from 'firebase/auth'
 import { getFirestore } from 'firebase/firestore'
 import { getStorage } from 'firebase/storage'
+import { getDatabase } from 'firebase/database'
 
 // Required env vars (exposed to client with NEXT_PUBLIC_ prefix)
 const requiredEnv = [
@@ -48,6 +49,10 @@ const firebaseConfig = {
       : undefined),
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL ||
+    (process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
+      ? `https://${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}-default-rtdb.firebaseio.com`
+      : undefined),
 }
 
 // In development, log which config keys are present to help debug auth/configuration-not-found.
@@ -66,6 +71,7 @@ const app = initializeApp(firebaseConfig)
 export const auth = getAuth(app)
 export const db = getFirestore(app)
 export const storage = getStorage(app)
+export const realtimeDb = getDatabase(app)
 
 export default app
 

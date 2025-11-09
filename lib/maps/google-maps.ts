@@ -179,7 +179,7 @@ export async function searchPlaces(
   );
 
   return new Promise((resolve, reject) => {
-    const request: google.maps.places.PlaceSearchRequest = {
+    const request: google.maps.places.TextSearchRequest = {
       query,
     };
 
