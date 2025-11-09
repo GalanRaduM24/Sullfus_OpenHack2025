@@ -58,15 +58,15 @@ export function PropertyScoreDisplay({ propertyData }: PropertyScoreDisplayProps
   }
 
   return (
-    <Card className="border-2 border-blue-200 bg-blue-50/50">
+    <Card className="border border-gray-800 bg-gray-900">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="flex items-center gap-2 text-blue-900">
+            <CardTitle className="flex items-center gap-2 text-white">
               <TrendingUp className="h-5 w-5" />
               Property Quality Score
             </CardTitle>
-            <CardDescription className="text-blue-700">
+            <CardDescription className="text-gray-400">
               Complete more fields to increase your score
             </CardDescription>
           </div>
@@ -74,7 +74,7 @@ export function PropertyScoreDisplay({ propertyData }: PropertyScoreDisplayProps
             <div className={`text-4xl font-bold ${getScoreColor(score.percentage)}`}>
               {score.total}
             </div>
-            <div className="text-sm text-muted-foreground">/ {score.maxPossible} points</div>
+            <div className="text-sm text-gray-500">/ {score.maxPossible} points</div>
           </div>
         </div>
       </CardHeader>
@@ -82,7 +82,7 @@ export function PropertyScoreDisplay({ propertyData }: PropertyScoreDisplayProps
         {/* Overall Progress */}
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
-            <span className="font-medium">Overall Completion</span>
+            <span className="font-medium text-white">Overall Completion</span>
             <span className={`font-bold ${getScoreColor(score.percentage)}`}>
               {score.percentage}%
             </span>
@@ -125,8 +125,8 @@ export function PropertyScoreDisplay({ propertyData }: PropertyScoreDisplayProps
         </div>
 
         {/* Detailed Checklist */}
-        <div className="space-y-2 pt-2 border-t">
-          <h4 className="font-semibold text-sm">Checklist:</h4>
+        <div className="space-y-2 pt-2 border-t border-gray-800">
+          <h4 className="font-semibold text-sm text-white">Checklist:</h4>
           <div className="grid grid-cols-2 gap-2 text-xs">
             <CheckItem checked={score.details.hasTitle} label="Title" />
             <CheckItem checked={score.details.hasDescription} label="Description (50+ chars)" />
@@ -149,9 +149,9 @@ export function PropertyScoreDisplay({ propertyData }: PropertyScoreDisplayProps
 
         {/* Tips */}
         {score.percentage < 100 && (
-          <div className="bg-blue-100 p-3 rounded-lg space-y-1">
-            <h5 className="font-semibold text-xs text-blue-900">🎯 Quick Tips:</h5>
-            <ul className="text-xs text-blue-800 space-y-1">
+          <div className="bg-blue-500/10 border border-blue-500/20 p-3 rounded-lg space-y-1">
+            <h5 className="font-semibold text-xs text-blue-400">🎯 Quick Tips:</h5>
+            <ul className="text-xs text-gray-300 space-y-1">
               {!score.details.hasVideo && <li>• Add a video tour to get +5 points!</li>}
               {score.details.hasImages < 5 && <li>• Add more images (each image: +3 points)</li>}
               {!score.details.hasYearBuilt && <li>• Add year built to get +5 points</li>}
@@ -178,11 +178,11 @@ function ScoreStat({ icon, label, value, max }: {
   }
 
   return (
-    <div className="flex flex-col items-center p-2 bg-white rounded-lg border">
-      <div className="text-muted-foreground mb-1">{icon}</div>
-      <div className="font-bold text-sm">{value}/{max}</div>
-      <div className="text-[10px] text-center text-muted-foreground">{label}</div>
-      <div className="w-full h-1 bg-gray-200 rounded-full mt-1 overflow-hidden">
+    <div className="flex flex-col items-center p-2 bg-gray-800 rounded-lg border border-gray-700">
+      <div className="text-gray-400 mb-1">{icon}</div>
+      <div className="font-bold text-sm text-white">{value}/{max}</div>
+      <div className="text-[10px] text-center text-gray-400">{label}</div>
+      <div className="w-full h-1 bg-gray-700 rounded-full mt-1 overflow-hidden">
         <div className={`h-full ${getColor()}`} style={{ width: `${percentage}%` }} />
       </div>
     </div>
@@ -193,11 +193,11 @@ function CheckItem({ checked, label }: { checked: boolean; label: string }) {
   return (
     <div className="flex items-center gap-1">
       {checked ? (
-        <CheckCircle className="h-3 w-3 text-green-600" />
+        <CheckCircle className="h-3 w-3 text-green-400" />
       ) : (
-        <XCircle className="h-3 w-3 text-gray-400" />
+        <XCircle className="h-3 w-3 text-gray-600" />
       )}
-      <span className={checked ? 'text-green-700' : 'text-gray-500'}>{label}</span>
+      <span className={checked ? 'text-green-400' : 'text-gray-500'}>{label}</span>
     </div>
   )
 }
