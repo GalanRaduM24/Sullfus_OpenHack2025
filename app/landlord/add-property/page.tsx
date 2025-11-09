@@ -13,6 +13,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Separator } from '@/components/ui/separator'
 import { useAuth } from '@/contexts/AuthContext'
 import { ProfileVerificationGuard } from '@/components/landlord/ProfileVerificationGuard'
+import { PropertyScoreDisplay } from '@/components/landlord/PropertyScoreDisplay'
 import { 
   Plus, 
   Upload, 
@@ -39,7 +40,11 @@ import {
   Cigarette,
   ArrowLeft,
   Save,
-  AlertTriangle
+  AlertTriangle,
+  TrendingUp,
+  Video,
+  Star,
+  Sparkles
 } from 'lucide-react'
 
 interface PropertyFormData {
@@ -249,6 +254,43 @@ function AddPropertyPageContent() {
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-white mb-2">Add New Property</h1>
           <p className="text-gray-400">Fill in the details to list your property</p>
+          
+          {/* Score Highlight Banner */}
+          <div className="mt-4 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/50 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <TrendingUp className="h-5 w-5 text-amber-400 mt-0.5" />
+              <div className="flex-1">
+                <h3 className="text-amber-100 font-semibold mb-1">💡 Maximize Your Property Score!</h3>
+                <p className="text-amber-200/90 text-sm">
+                  The better you write and the more details you add, the higher your score! Complete descriptions, quality photos, 
+                  and a <strong>video tour</strong> will boost your visibility and attract more tenants.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Property Score Display - Real-time scoring */}
+        <div className="mb-6">
+          <PropertyScoreDisplay
+            propertyData={{
+              title: formData.title,
+              description: formData.description,
+              price: formData.price > 0 ? formData.price : undefined,
+              location: {
+                address: formData.location.address,
+                lat: formData.location.coordinates?.lat,
+                lng: formData.location.coordinates?.lng,
+              },
+              area: formData.specs.area > 0 ? formData.specs.area : undefined,
+              floor: formData.specs.floor,
+              totalFloors: formData.specs.totalFloors,
+              bedrooms: formData.specs.bedrooms,
+              bathrooms: formData.specs.bathrooms,
+              images: formData.images.map(() => 'placeholder'),
+              amenities: formData.amenities,
+            }}
+          />
         </div>
 
         <AnimatePresence mode="wait">
@@ -265,7 +307,10 @@ function AddPropertyPageContent() {
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div>
-                    <Label htmlFor="title" className="text-white">Property Title *</Label>
+                    <Label htmlFor="title" className="text-white flex items-center gap-2">
+                      Property Title * 
+                      <span className="text-xs text-blue-400 font-normal">(+8 points)</span>
+                    </Label>
                     <Input
                       id="title"
                       value={formData.title}
@@ -273,18 +318,37 @@ function AddPropertyPageContent() {
                       placeholder="e.g., Modern 2BR Apartment in Herastrau"
                       className="bg-gray-800/50 border-gray-700 text-white"
                     />
+                    <p className="text-xs text-gray-400 mt-1">
+                      💡 A clear, descriptive title helps tenants find your property faster
+                    </p>
                   </div>
 
                   <div>
-                    <Label htmlFor="description" className="text-white">Description *</Label>
+                    <Label htmlFor="description" className="text-white flex items-center gap-2">
+                      Description * 
+                      <span className="text-xs text-green-400 font-normal">(+10 points for 50+ chars)</span>
+                    </Label>
                     <Textarea
                       id="description"
                       value={formData.description}
                       onChange={(e) => handleInputChange('description', e.target.value)}
-                      placeholder="Describe your property in detail..."
-                      rows={4}
+                      placeholder="Describe your property in detail... Include unique features, nearby amenities, transportation, and what makes it special!"
+                      rows={6}
                       className="bg-gray-800/50 border-gray-700 text-white"
                     />
+                    <div className="flex items-start gap-2 mt-2 bg-blue-900/20 border border-blue-500/30 rounded p-3">
+                      <Star className="h-4 w-4 text-blue-400 mt-0.5 flex-shrink-0" />
+                      <div className="text-xs text-blue-300">
+                        <strong className="text-blue-100">Scoring Tip:</strong> Write at least 100 words with proper punctuation 
+                        and structure. Our AI analyzes your description quality - avoid generic text or jokes!
+                        {formData.description && (
+                          <span className="block mt-1 text-blue-200">
+                            Current length: <strong>{formData.description.length}</strong> characters 
+                            ({formData.description.split(/\s+/).filter(w => w.length > 0).length} words)
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -338,9 +402,23 @@ function AddPropertyPageContent() {
                   <CardTitle className="text-white">Location & Specifications</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
+                  {/* Location Score Tip */}
+                  <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-3">
+                    <div className="flex items-start gap-2">
+                      <MapPin className="h-4 w-4 text-green-400 mt-0.5 flex-shrink-0" />
+                      <div className="text-xs text-green-300">
+                        <strong className="text-green-100">Location Bonus:</strong> Adding GPS coordinates gives you 
+                        <strong className="text-green-200"> +10 extra points!</strong> Use Google Maps to pinpoint exact location.
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="address" className="text-white">Address *</Label>
+                      <Label htmlFor="address" className="text-white flex items-center gap-2">
+                        Address * 
+                        <span className="text-xs text-blue-400 font-normal">(+10 points)</span>
+                      </Label>
                       <Input
                         id="address"
                         value={formData.location.address}
@@ -375,9 +453,22 @@ function AddPropertyPageContent() {
 
                   <Separator className="bg-gray-700" />
 
+                  {/* Detailed Info Tip */}
+                  <div className="bg-purple-900/20 border border-purple-500/30 rounded-lg p-3">
+                    <div className="flex items-start gap-2">
+                      <Sparkles className="h-4 w-4 text-purple-400 mt-0.5 flex-shrink-0" />
+                      <div className="text-xs text-purple-300">
+                        <strong className="text-purple-100">Detail Bonus:</strong> Every specification you add increases your score! 
+                        Complete all fields to get up to <strong className="text-purple-200">+25 points</strong>
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                     <div>
-                      <Label htmlFor="bedrooms" className="text-white">Bedrooms</Label>
+                      <Label htmlFor="bedrooms" className="text-white text-sm">
+                        Bedrooms <span className="text-xs text-blue-400">(+3pts)</span>
+                      </Label>
                       <Input
                         id="bedrooms"
                         type="number"
@@ -389,7 +480,9 @@ function AddPropertyPageContent() {
                     </div>
 
                     <div>
-                      <Label htmlFor="bathrooms" className="text-white">Bathrooms</Label>
+                      <Label htmlFor="bathrooms" className="text-white text-sm">
+                        Bathrooms <span className="text-xs text-blue-400">(+2pts)</span>
+                      </Label>
                       <Input
                         id="bathrooms"
                         type="number"
@@ -401,7 +494,9 @@ function AddPropertyPageContent() {
                     </div>
 
                     <div>
-                      <Label htmlFor="area" className="text-white">Area (m²)</Label>
+                      <Label htmlFor="area" className="text-white text-sm">
+                        Area (m²) <span className="text-xs text-green-400">(+8pts)</span>
+                      </Label>
                       <Input
                         id="area"
                         type="number"
@@ -413,7 +508,9 @@ function AddPropertyPageContent() {
                     </div>
 
                     <div>
-                      <Label htmlFor="floor" className="text-white">Floor</Label>
+                      <Label htmlFor="floor" className="text-white text-sm">
+                        Floor <span className="text-xs text-blue-400">(+3.5pts)</span>
+                      </Label>
                       <Input
                         id="floor"
                         type="number"
@@ -425,7 +522,9 @@ function AddPropertyPageContent() {
                     </div>
 
                     <div>
-                      <Label htmlFor="totalFloors" className="text-white">Total Floors</Label>
+                      <Label htmlFor="totalFloors" className="text-white text-sm">
+                        Total Floors <span className="text-xs text-blue-400">(+3.5pts)</span>
+                      </Label>
                       <Input
                         id="totalFloors"
                         type="number"
@@ -501,7 +600,14 @@ function AddPropertyPageContent() {
                   <Separator className="bg-gray-700" />
 
                   <div>
-                    <h3 className="text-lg font-semibold text-white mb-4">Amenities</h3>
+                    <h3 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
+                      Amenities
+                      <Badge className="bg-amber-500 text-white">+2 pts each!</Badge>
+                    </h3>
+                    <p className="text-xs text-gray-400 mb-4">
+                      💡 Each amenity you add gives <strong className="text-amber-400">+2 points</strong> (up to 10 points total). 
+                      More amenities = more attractive listing!
+                    </p>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                       {AMENITIES.map((amenity) => {
                         const IconComponent = amenity.icon
@@ -630,12 +736,40 @@ function AddPropertyPageContent() {
             >
               <Card className="bg-gray-900/50 backdrop-blur-xl border-gray-800">
                 <CardHeader>
-                  <CardTitle className="text-white">Photos & Final Review</CardTitle>
+                  <CardTitle className="text-white">Photos & Video - Boost Your Score!</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
+                  {/* Media Scoring Banner */}
+                  <div className="bg-gradient-to-r from-green-900/30 to-emerald-900/30 border-2 border-green-500/50 rounded-lg p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="bg-green-500 rounded-full p-2">
+                        <Video className="h-5 w-5 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="text-green-100 font-bold text-lg mb-2">🎥 VIDEO BONUS: +5 Points!</h4>
+                        <p className="text-green-200 text-sm mb-2">
+                          Upload a video tour and get <strong>5 extra points!</strong> Videos dramatically increase tenant 
+                          interest and help your property stand out.
+                        </p>
+                        <div className="flex items-center gap-2 text-xs text-green-300">
+                          <span>📸 Photos: +3 pts each (up to 15 pts)</span>
+                          <span className="text-green-400">•</span>
+                          <span>🎬 Video: +5 pts</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   <div>
-                    <Label className="text-white mb-3 block">Property Photos *</Label>
-                    <div className="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Label className="text-white">
+                        Property Photos * 
+                      </Label>
+                      <Badge variant="outline" className="text-xs bg-blue-500/20 border-blue-400 text-blue-300">
+                        +3 points per photo (max 5 photos = 15 pts)
+                      </Badge>
+                    </div>
+                    <div className="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center hover:border-blue-500 transition-colors">
                       <input
                         type="file"
                         multiple
@@ -646,8 +780,9 @@ function AddPropertyPageContent() {
                       />
                       <label htmlFor="image-upload" className="cursor-pointer">
                         <Upload className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                        <p className="text-gray-300 mb-2">Upload property photos</p>
+                        <p className="text-gray-300 mb-2 font-semibold">Upload property photos</p>
                         <p className="text-sm text-gray-500">PNG, JPG up to 10MB each (max 10 photos)</p>
+                        <p className="text-xs text-blue-400 mt-2">💡 Tip: Show different rooms and angles for best results!</p>
                       </label>
                     </div>
 
@@ -678,6 +813,32 @@ function AddPropertyPageContent() {
                       <p className="text-orange-400">Please upload at least one photo to continue</p>
                     </div>
                   )}
+
+                  <Separator className="bg-gray-700" />
+
+                  {/* Video Upload Section */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <Label className="text-white">
+                        Video Tour (Optional)
+                      </Label>
+                      <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs">
+                        🎬 +5 BONUS POINTS!
+                      </Badge>
+                    </div>
+                    <Input
+                      type="url"
+                      placeholder="https://youtube.com/watch?v=... or your video URL"
+                      className="bg-gray-800/50 border-gray-700 text-white"
+                    />
+                    <div className="mt-2 bg-gradient-to-r from-green-900/20 to-emerald-900/20 border border-green-500/30 rounded p-3">
+                      <p className="text-xs text-green-300">
+                        <strong className="text-green-100">⭐ Pro Tip:</strong> Properties with video tours get 
+                        <strong className="text-green-200"> 3x more views!</strong> Upload to YouTube and paste the link here,
+                        or upload directly to your hosting service.
+                      </p>
+                    </div>
+                  </div>
 
                   <Separator className="bg-gray-700" />
 
