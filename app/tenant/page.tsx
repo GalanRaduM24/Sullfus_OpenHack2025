@@ -86,15 +86,6 @@ export default function TenantDashboard() {
           </Card>
         )}
 
-        {/* Profile Verification Card - Only shows when user needs to complete profile or verify ID */}
-        {user && (needsProfileCompletion || needsIdVerification) && !showProfileForm && !showIDVerification && (
-          <ProfileVerificationCard
-            userRole="tenant"
-            onCompleteProfile={handleCompleteProfile}
-            onVerifyIdentity={handleVerifyIdentity}
-          />
-        )}
-
         {user && showProfileForm && (
           <TenantProfileForm
             userId={user.uid}

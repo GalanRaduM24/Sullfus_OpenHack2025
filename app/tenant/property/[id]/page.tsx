@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { GoogleMap } from '@/components/maps/GoogleMap'
 import { 
   ArrowLeft,
   Heart, 
@@ -361,18 +362,22 @@ export default function PropertyDetailsPage() {
             View All Photos
           </Button>
 
+          {/* Badges Overlay - Top Position */}
+          <div className="absolute top-20 left-6 z-20">
+            <div className="flex items-center gap-2">
+              <Badge className="bg-green-600 text-white">Available</Badge>
+              {property.trustBadges.map((badge) => (
+                <Badge key={badge} variant="outline" className="border-white/30 text-white bg-black/40 backdrop-blur-sm">
+                  <Verified className="mr-1 h-3 w-3" />
+                  {badge.replace('-', ' ')}
+                </Badge>
+              ))}
+            </div>
+          </div>
+
           {/* Property Info Overlay */}
           <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
             <div className="max-w-7xl mx-auto">
-              <div className="flex items-center gap-2 mb-2">
-                <Badge className="bg-green-600 text-white">Available</Badge>
-                {property.trustBadges.map((badge) => (
-                  <Badge key={badge} variant="outline" className="border-white/30 text-white">
-                    <Verified className="mr-1 h-3 w-3" />
-                    {badge.replace('-', ' ')}
-                  </Badge>
-                ))}
-              </div>
               <h1 className="text-4xl font-bold mb-2">{property.title}</h1>
               <div className="flex items-center gap-4 text-lg">
                 <div className="flex items-center gap-1">
@@ -399,7 +404,7 @@ export default function PropertyDetailsPage() {
         </div>
 
         {/* Image Thumbnails */}
-        <div className="absolute bottom-20 left-6 right-6">
+        <div className="absolute bottom-24 left-6 right-6 z-10">
           <div className="flex gap-2 overflow-x-auto pb-2">
             {property.images.map((image, index) => (
               <button
@@ -629,12 +634,14 @@ export default function PropertyDetailsPage() {
                   <CardContent className="p-6">
                     <h3 className="text-xl font-semibold text-white mb-6">Location & Neighborhood</h3>
                     
-                    <div className="aspect-video bg-gray-800 rounded-lg flex items-center justify-center mb-6">
-                      <div className="text-center">
-                        <Navigation className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                        <p className="text-gray-400">Interactive map coming soon</p>
-                        <p className="text-sm text-gray-500 mt-1">{property.location.address}</p>
-                      </div>
+                    <div className="rounded-lg overflow-hidden mb-6">
+                      <GoogleMap
+                        center={property.location.coordinates}
+                        zoom={15}
+                        markers={[property.location.coordinates]}
+                        height="400px"
+                        className="w-full"
+                      />
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

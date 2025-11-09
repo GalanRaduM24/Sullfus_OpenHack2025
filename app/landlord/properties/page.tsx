@@ -478,8 +478,6 @@ function PropertiesPageContent() {
                             <div className="space-y-1 text-sm text-gray-400">
                               <div>Age: {inquiry.tenantProfile.age}</div>
                               <div>Family: {inquiry.familySize} person{inquiry.familySize !== 1 ? 's' : ''}</div>
-                              <div>Income: €{inquiry.income.toLocaleString()}/month</div>
-                              <div>Credit Score: {inquiry.creditScore || 'N/A'}</div>
                             </div>
                           </div>
                           <div>
@@ -488,7 +486,6 @@ function PropertiesPageContent() {
                               <div>Smoking: {inquiry.tenantProfile.smokingStatus}</div>
                               <div>Pets: {inquiry.hasPets ? 'Yes' : 'No'}</div>
                               <div>Children: {inquiry.hasChildren ? 'Yes' : 'No'}</div>
-                              <div>Years in city: {inquiry.tenantProfile.yearsInCity}</div>
                             </div>
                           </div>
                           <div>

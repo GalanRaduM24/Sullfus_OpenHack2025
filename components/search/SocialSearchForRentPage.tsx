@@ -407,38 +407,34 @@ export function SocialSearchForRentPage() {
 
   const processAiQueryWithGemini = async (query: string) => {
     try {
-      // Import Gemini
-      const { genAI } = await import('@/lib/gemini')
-      const model = genAI.getGenerativeModel({ model: 'gemini-pro' })
+      // Check if OpenAI API key is set
+      const apiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY
+      if (!apiKey) {
+        console.log('OpenAI API key not configured, using fallback')
+        return processAiQueryFallback(query)
+      }
 
-      // Create a structured prompt for Gemini
-      const prompt = `You are a real estate search assistant. Extract property search criteria from the user's query and respond in JSON format.
-
-User query: "${query}"
-
-Extract the following information if mentioned:
-- bedrooms (number or range, use 1 for studio/single/1-person apartment)
-- price_max (maximum price in EUR)
-- price_min (minimum price in EUR)
-- location (neighborhood name in Bucharest)
-- pets_allowed (true/false)
-- furnished (options: "furnished", "unfurnished", "any")
-- parking (true/false if mentioned)
-- balcony (true/false if mentioned)
-- property_type (options: "apartment", "house", "villa", "studio")
-- amenities (array of: "air_conditioning", "wifi", "gym", "pool", etc.)
-
-Also provide a friendly confirmation message for the user.
-
-Respond ONLY with valid JSON in this exact format:
+      // Call OpenAI API
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: 'gpt-3.5-turbo',
+          messages: [
+            {
+              role: 'system',
+              content: `You are a real estate search assistant. Extract property search criteria from user queries and respond ONLY with valid JSON in this format:
 {
   "filters": {
-    "bedrooms": number or null,
+    "bedrooms": number or null (use 1 for studio/single/1-person),
     "price_max": number or null,
     "price_min": number or null,
     "location": string or null,
     "pets_allowed": boolean or null,
-    "furnished": string or null,
+    "furnished": "furnished"|"unfurnished"|null,
     "parking": boolean or null,
     "balcony": boolean or null,
     "property_type": string or null,
@@ -446,18 +442,26 @@ Respond ONLY with valid JSON in this exact format:
   },
   "message": "friendly confirmation message"
 }`
+            },
+            {
+              role: 'user',
+              content: query
+            }
+          ],
+          temperature: 0.3,
+          response_format: { type: "json_object" }
+        })
+      })
 
-      const result = await model.generateContent(prompt)
-      const response = await result.response
-      const text = response.text()
-
-      // Parse JSON from response
-      const jsonMatch = text.match(/\{[\s\S]*\}/)
-      if (!jsonMatch) {
-        throw new Error('Invalid response format')
+      if (!response.ok) {
+        throw new Error(`OpenAI API error: ${response.status}`)
       }
 
-      const parsed = JSON.parse(jsonMatch[0])
+      const data = await response.json()
+      const aiResponse = data.choices[0].message.content
+
+      // Parse JSON response
+      const parsed = JSON.parse(aiResponse)
       const extractedFilters = parsed.filters
       const message = parsed.message || "I've updated your search!"
 
@@ -522,16 +526,21 @@ Respond ONLY with valid JSON in this exact format:
     const lowerQuery = query.toLowerCase()
     let message = "I've updated your search based on your request!"
     let newFilters: Partial<SocialSearchFilters> = {}
+    let messageParts: string[] = []
 
     // Basic pattern matching as fallback
     if (lowerQuery.match(/(\d+)\s*person|single|studio|1\s*bed/)) {
       newFilters.bedrooms = { min: 1, max: 1 }
-      message = "Looking for 1-bedroom apartments!"
+      messageParts.push("1-bedroom apartments")
     }
 
-    if (lowerQuery.match(/pet|dog|cat/)) {
+    if (lowerQuery.match(/pet|dog|cat|animal/i)) {
       newFilters.policies = ['pets_allowed']
-      message += " Pet-friendly properties only."
+      messageParts.push("pet-friendly properties")
+    }
+
+    if (messageParts.length > 0) {
+      message = `Searching for ${messageParts.join(' with ')}!`
     }
 
     return { message, filters: Object.keys(newFilters).length > 0 ? newFilters : null }
@@ -590,7 +599,7 @@ Respond ONLY with valid JSON in this exact format:
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900">
       {/* Hero Search Header */}
-      <div className="relative bg-gradient-to-r from-blue-900/50 via-purple-900/50 to-pink-900/50 backdrop-blur-sm border-b border-gray-800">
+      <div className="relative bg-gray-900/50 backdrop-blur-sm border-b border-gray-800">
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1920')] bg-cover bg-center opacity-10" />
         <div className="relative max-w-7xl mx-auto px-6 py-12">
           <motion.div
@@ -599,7 +608,7 @@ Respond ONLY with valid JSON in this exact format:
             transition={{ duration: 0.6 }}
             className="text-center mb-8"
           >
-            <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent mb-4">
+            <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">
               Discover Your Perfect Home
             </h1>
             <p className="text-lg text-gray-300 max-w-2xl mx-auto">
@@ -615,7 +624,7 @@ Respond ONLY with valid JSON in this exact format:
             className="max-w-4xl mx-auto"
           >
             <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl blur opacity-20" />
+              <div className="absolute inset-0 bg-blue-600 rounded-2xl blur opacity-20" />
               <div className="relative bg-black/50 backdrop-blur-xl rounded-2xl border border-gray-700 p-6">
                 <div className="flex flex-col lg:flex-row gap-4">
                   <div className="flex-1 relative">
@@ -633,8 +642,8 @@ Respond ONLY with valid JSON in this exact format:
                       onClick={() => setShowAIChat(!showAIChat)}
                       className={`h-12 px-6 rounded-xl transition-all ${
                         showAIChat 
-                          ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700' 
-                          : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700'
+                          ? 'bg-blue-700 hover:bg-blue-800' 
+                          : 'bg-blue-600 hover:bg-blue-700'
                       }`}
                     >
                       <Bot className="mr-2 h-5 w-5" />
@@ -700,7 +709,7 @@ Respond ONLY with valid JSON in this exact format:
                         <Button
                           onClick={handleAiMessage}
                           disabled={!aiInput.trim() || isAiLoading}
-                          className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                          className="bg-blue-600 hover:bg-blue-700"
                         >
                           <Send className="h-4 w-4" />
                         </Button>
@@ -738,7 +747,7 @@ Respond ONLY with valid JSON in this exact format:
                   variant={filter.active ? "default" : "outline"}
                   className={`cursor-pointer px-4 py-2 text-sm transition-all ${
                     filter.active 
-                      ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white border-0' 
+                      ? 'bg-blue-600 text-white border-0' 
                       : 'bg-gray-800/50 text-gray-300 border-gray-600 hover:bg-gray-700/50'
                   }`}
                   onClick={filter.onClick}
@@ -815,7 +824,7 @@ Respond ONLY with valid JSON in this exact format:
                           onClick={() => setFilters(prev => ({ ...prev, bedrooms: { min: num, max: num } }))}
                           className={`h-8 text-xs ${
                             filters.bedrooms.min === num && filters.bedrooms.max === num
-                              ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white border-0'
+                              ? 'bg-blue-600 text-white border-0'
                               : 'bg-gray-800/50 text-gray-300 border-gray-600 hover:bg-gray-700/50'
                           }`}
                         >
@@ -837,7 +846,7 @@ Respond ONLY with valid JSON in this exact format:
                           onClick={() => setFilters(prev => ({ ...prev, bathrooms: { min: num, max: num } }))}
                           className={`h-8 text-xs ${
                             filters.bathrooms.min === num && filters.bathrooms.max === num
-                              ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white border-0'
+                              ? 'bg-blue-600 text-white border-0'
                               : 'bg-gray-800/50 text-gray-300 border-gray-600 hover:bg-gray-700/50'
                           }`}
                         >
@@ -1107,7 +1116,7 @@ Respond ONLY with valid JSON in this exact format:
                           onClick={() => setFilters(prev => ({ ...prev, furnished: option.value as any }))}
                           className={`h-8 text-xs ${
                             filters.furnished === option.value
-                              ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white border-0'
+                              ? 'bg-blue-600 text-white border-0'
                               : 'bg-gray-800/50 text-gray-300 border-gray-600 hover:bg-gray-700/50'
                           }`}
                         >
@@ -1213,7 +1222,7 @@ Respond ONLY with valid JSON in this exact format:
                 </Button>
                 <Button
                   onClick={() => setShowFilters(false)}
-                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                  className="bg-blue-600 hover:bg-blue-700"
                 >
                   Apply Filters
                 </Button>
@@ -1272,11 +1281,11 @@ function PropertySocialCard({
 }) {
   const getBadgeColor = (badge: string) => {
     const colors: { [key: string]: string } = {
-      'super-host': 'bg-gradient-to-r from-purple-500 to-pink-500 text-white',
-      'quick-responder': 'bg-gradient-to-r from-green-500 to-blue-500 text-white',
-      'eco-friendly': 'bg-gradient-to-r from-green-400 to-green-600 text-white',
-      'experienced-host': 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white',
-      'pet-friendly': 'bg-gradient-to-r from-orange-400 to-red-500 text-white'
+      'super-host': 'bg-blue-600 text-white',
+      'quick-responder': 'bg-green-600 text-white',
+      'eco-friendly': 'bg-green-600 text-white',
+      'experienced-host': 'bg-blue-600 text-white',
+      'pet-friendly': 'bg-orange-600 text-white'
     }
     return colors[badge] || 'bg-gray-100 text-gray-800'
   }
@@ -1391,7 +1400,7 @@ function PropertySocialCard({
                   <div className="relative">
                     <Avatar className="w-12 h-12">
                       <AvatarImage src={listing.landlord.avatar} />
-                      <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                      <AvatarFallback className="bg-blue-600 text-white">
                         {listing.landlord.name.split(' ').map(n => n[0]).join('')}
                       </AvatarFallback>
                     </Avatar>
@@ -1417,7 +1426,7 @@ function PropertySocialCard({
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                  <div className="text-xl font-bold text-blue-400">
                     {listing.landlord.socialScore}
                   </div>
                   <div className="text-xs text-gray-400">Social Score</div>
@@ -1481,7 +1490,7 @@ function PropertySocialCard({
 
             {/* Action Buttons */}
             <div className="flex gap-3 pt-2">
-              <Button className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0">
+              <Button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white border-0">
                 <MessageSquare className="h-4 w-4 mr-2" />
                 Message
               </Button>
