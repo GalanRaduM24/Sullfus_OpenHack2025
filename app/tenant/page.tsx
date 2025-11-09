@@ -56,29 +56,29 @@ export default function TenantDashboard() {
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-6xl mx-auto space-y-8">
         <div className="space-y-2">
-          <h1 className="text-4xl font-bold">Browse Properties 👋</h1>
-          <p className="text-muted-foreground text-lg">
+          <h1 className="text-4xl font-bold text-white">Find Your Home 👋</h1>
+          <p className="text-gray-400 text-lg">
             {user ? `Welcome back${profile?.name ? `, ${profile.name}` : ''}!` : 'Browse available properties. Sign in to like properties and connect with landlords.'}
           </p>
         </div>
 
         {!user && !loading && (
-          <Card className="border-amber-500/50 bg-amber-50/10">
+          <Card className="border-blue-800/50 bg-blue-900/20">
             <CardHeader>
-              <CardTitle>Sign in to get started</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-white">Sign in to get started</CardTitle>
+              <CardDescription className="text-gray-400">
                 Create an account to like properties and chat with landlords
               </CardDescription>
             </CardHeader>
             <CardContent className="flex gap-4">
               <Link href="/auth/signup">
-                <Button>
+                <Button className="bg-blue-600 hover:bg-blue-700">
                   <LogIn className="mr-2 h-4 w-4" />
                   Sign Up
                 </Button>
               </Link>
               <Link href="/auth/signin">
-                <Button variant="outline">
+                <Button variant="outline" className="border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-white">
                   Sign In
                 </Button>
               </Link>
@@ -113,9 +113,9 @@ export default function TenantDashboard() {
         )}
 
         {user && isIdVerified && !showProfileForm && !showIDVerification && (
-          <Card className="border-green-500/50 bg-green-50/10">
+          <Card className="border-green-800/50 bg-green-900/20">
             <CardContent className="pt-6">
-              <div className="flex items-center gap-3 text-green-600">
+              <div className="flex items-center gap-3 text-green-400">
                 <CheckCircle className="h-6 w-6" />
                 <p className="font-semibold">Your profile is complete and verified!</p>
               </div>
@@ -125,16 +125,16 @@ export default function TenantDashboard() {
 
         {/* Quick Search - Always show for authenticated users */}
         {user && !showProfileForm && !showIDVerification && (
-          <Card>
+          <Card className="border-gray-800 bg-gray-900">
             <CardHeader>
-              <CardTitle>Find Your Perfect Rental</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-white">Find Your Perfect Rental</CardTitle>
+              <CardDescription className="text-gray-400">
                 Search thousands of properties in Bucharest and beyond
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Link href="/tenant/search">
-                <Button size="lg" className="w-full">
+                <Button size="lg" className="w-full bg-blue-600 hover:bg-blue-700">
                   <Search className="mr-2 h-5 w-5" />
                   Start Searching Properties
                 </Button>
@@ -145,36 +145,36 @@ export default function TenantDashboard() {
 
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card>
+          <Card className="border-gray-800 bg-gray-900 hover:bg-gray-800/50 transition-colors">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-2xl font-bold">500+</p>
-                  <p className="text-sm text-muted-foreground">Available Properties</p>
+                  <p className="text-2xl font-bold text-white">500+</p>
+                  <p className="text-sm text-gray-400">Available Properties</p>
                 </div>
-                <Home className="h-8 w-8 text-muted-foreground" />
+                <Home className="h-8 w-8 text-gray-600" />
               </div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="border-gray-800 bg-gray-900 hover:bg-gray-800/50 transition-colors">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-2xl font-bold">€450</p>
-                  <p className="text-sm text-muted-foreground">Average Price</p>
+                  <p className="text-2xl font-bold text-white">€450</p>
+                  <p className="text-sm text-gray-400">Average Price</p>
                 </div>
-                <Euro className="h-8 w-8 text-muted-foreground" />
+                <Euro className="h-8 w-8 text-gray-600" />
               </div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="border-gray-800 bg-gray-900 hover:bg-gray-800/50 transition-colors">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-2xl font-bold">24h</p>
-                  <p className="text-sm text-muted-foreground">Average Response</p>
+                  <p className="text-2xl font-bold text-white">24h</p>
+                  <p className="text-sm text-gray-400">Average Response</p>
                 </div>
-                <Clock className="h-8 w-8 text-muted-foreground" />
+                <Clock className="h-8 w-8 text-gray-600" />
               </div>
             </CardContent>
           </Card>

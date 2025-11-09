@@ -376,11 +376,12 @@ export function SocialSearchForRentPage() {
 
     const userMessage = { id: Date.now().toString(), type: 'user' as const, content: aiInput }
     setAiMessages(prev => [...prev, userMessage])
+    const userQuery = aiInput
     setAiInput('')
     setIsAiLoading(true)
 
-    setTimeout(() => {
-      const response = processAiQuery(aiInput)
+    try {
+      const response = await processAiQueryWithGemini(userQuery)
       const botMessage = { 
         id: (Date.now() + 1).toString(), 
         type: 'bot' as const, 
@@ -391,36 +392,146 @@ export function SocialSearchForRentPage() {
       if (response.filters) {
         setFilters(prev => ({ ...prev, ...response.filters }))
       }
+    } catch (error) {
+      console.error('AI Error:', error)
+      const errorMessage = { 
+        id: (Date.now() + 1).toString(), 
+        type: 'bot' as const, 
+        content: "Sorry, I couldn't process that. Please try again!" 
+      }
+      setAiMessages(prev => [...prev, errorMessage])
+    } finally {
       setIsAiLoading(false)
-    }, 1000)
+    }
   }
 
-  const processAiQuery = (query: string) => {
+  const processAiQueryWithGemini = async (query: string) => {
+    try {
+      // Import Gemini
+      const { genAI } = await import('@/lib/gemini')
+      const model = genAI.getGenerativeModel({ model: 'gemini-pro' })
+
+      // Create a structured prompt for Gemini
+      const prompt = `You are a real estate search assistant. Extract property search criteria from the user's query and respond in JSON format.
+
+User query: "${query}"
+
+Extract the following information if mentioned:
+- bedrooms (number or range, use 1 for studio/single/1-person apartment)
+- price_max (maximum price in EUR)
+- price_min (minimum price in EUR)
+- location (neighborhood name in Bucharest)
+- pets_allowed (true/false)
+- furnished (options: "furnished", "unfurnished", "any")
+- parking (true/false if mentioned)
+- balcony (true/false if mentioned)
+- property_type (options: "apartment", "house", "villa", "studio")
+- amenities (array of: "air_conditioning", "wifi", "gym", "pool", etc.)
+
+Also provide a friendly confirmation message for the user.
+
+Respond ONLY with valid JSON in this exact format:
+{
+  "filters": {
+    "bedrooms": number or null,
+    "price_max": number or null,
+    "price_min": number or null,
+    "location": string or null,
+    "pets_allowed": boolean or null,
+    "furnished": string or null,
+    "parking": boolean or null,
+    "balcony": boolean or null,
+    "property_type": string or null,
+    "amenities": array or null
+  },
+  "message": "friendly confirmation message"
+}`
+
+      const result = await model.generateContent(prompt)
+      const response = await result.response
+      const text = response.text()
+
+      // Parse JSON from response
+      const jsonMatch = text.match(/\{[\s\S]*\}/)
+      if (!jsonMatch) {
+        throw new Error('Invalid response format')
+      }
+
+      const parsed = JSON.parse(jsonMatch[0])
+      const extractedFilters = parsed.filters
+      const message = parsed.message || "I've updated your search!"
+
+      // Convert Gemini response to our filter format
+      const newFilters: Partial<SocialSearchFilters> = {}
+
+      if (extractedFilters.bedrooms !== null) {
+        newFilters.bedrooms = { 
+          min: extractedFilters.bedrooms, 
+          max: extractedFilters.bedrooms + 1 
+        }
+      }
+
+      if (extractedFilters.price_max !== null || extractedFilters.price_min !== null) {
+        newFilters.priceRange = {
+          min: extractedFilters.price_min || 0,
+          max: extractedFilters.price_max || 2000
+        }
+      }
+
+      if (extractedFilters.location) {
+        newFilters.location = extractedFilters.location
+      }
+
+      if (extractedFilters.pets_allowed === true) {
+        newFilters.policies = ['pets_allowed']
+      }
+
+      if (extractedFilters.furnished && extractedFilters.furnished !== 'any') {
+        newFilters.furnished = extractedFilters.furnished as 'furnished' | 'unfurnished'
+      }
+
+      if (extractedFilters.parking === true) {
+        newFilters.parkingType = ['underground', 'street', 'garage']
+      }
+
+      if (extractedFilters.balcony === true) {
+        newFilters.outdoorSpaces = ['balcony']
+      }
+
+      if (extractedFilters.property_type) {
+        newFilters.propertyType = [extractedFilters.property_type]
+      }
+
+      if (extractedFilters.amenities && Array.isArray(extractedFilters.amenities)) {
+        newFilters.amenities = extractedFilters.amenities
+      }
+
+      return { 
+        message, 
+        filters: Object.keys(newFilters).length > 0 ? newFilters : null 
+      }
+
+    } catch (error) {
+      console.error('Gemini API error:', error)
+      // Fallback to simple pattern matching
+      return processAiQueryFallback(query)
+    }
+  }
+
+  const processAiQueryFallback = (query: string) => {
     const lowerQuery = query.toLowerCase()
     let message = "I've updated your search based on your request!"
     let newFilters: Partial<SocialSearchFilters> = {}
 
-    if (lowerQuery.includes('studio')) {
-      newFilters.bedrooms = { min: 0, max: 0 }
-      message = "Looking for studio apartments!"
-    } else if (lowerQuery.match(/(\d+)\s*bed/)) {
-      const bedrooms = parseInt(lowerQuery.match(/(\d+)\s*bed/)![1])
-      newFilters.bedrooms = { min: bedrooms, max: bedrooms }
-      message = `Searching for ${bedrooms}-bedroom properties!`
+    // Basic pattern matching as fallback
+    if (lowerQuery.match(/(\d+)\s*person|single|studio|1\s*bed/)) {
+      newFilters.bedrooms = { min: 1, max: 1 }
+      message = "Looking for 1-bedroom apartments!"
     }
 
-    if (lowerQuery.match(/under|below.*?(\d+)/)) {
-      const price = parseInt(lowerQuery.match(/under|below.*?(\d+)/)![1])
-      newFilters.priceRange = { min: 0, max: price }
-      message += ` Under €${price}/month.`
-    }
-
-    if (lowerQuery.includes('herastrau')) {
-      newFilters.location = 'Herastrau'
-      message += ' In Herastrau area.'
-    } else if (lowerQuery.includes('old town')) {
-      newFilters.location = 'Old Town'
-      message += ' In Old Town area.'
+    if (lowerQuery.match(/pet|dog|cat/)) {
+      newFilters.policies = ['pets_allowed']
+      message += " Pet-friendly properties only."
     }
 
     return { message, filters: Object.keys(newFilters).length > 0 ? newFilters : null }

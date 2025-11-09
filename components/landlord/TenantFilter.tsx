@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Slider } from '@/components/ui/slider'
@@ -14,16 +13,8 @@ import {
   Filter,
   X,
   Users,
-  Euro,
-  Calendar,
-  Briefcase,
-  Home,
   Heart,
-  Cigarette,
-  Dog,
-  Star,
-  TrendingUp,
-  UserCheck
+  Star
 } from 'lucide-react'
 
 interface TenantFilterProps {
@@ -33,33 +24,21 @@ interface TenantFilterProps {
 }
 
 interface FilterCriteria {
-  budgetRange: [number, number]
-  incomeRange: [number, number]
-  creditScoreRange: [number, number]
   ageRange: [number, number]
   familySize: number[]
   hasChildren: boolean | null
   hasPets: boolean | null
   smokingStatus: string[]
-  occupations: string[]
   personality: string[]
-  yearsInCity: [number, number]
-  status: string[]
 }
 
 const DEFAULT_FILTERS: FilterCriteria = {
-  budgetRange: [0, 3000],
-  incomeRange: [0, 20000],
-  creditScoreRange: [300, 850],
   ageRange: [18, 65],
   familySize: [],
   hasChildren: null,
   hasPets: null,
   smokingStatus: [],
-  occupations: [],
-  personality: [],
-  yearsInCity: [0, 20],
-  status: []
+  personality: []
 }
 
 const SMOKING_OPTIONS = [
@@ -73,14 +52,6 @@ const PERSONALITY_TRAITS = [
   'creative', 'respectful', 'clean', 'pet-lover', 'family-oriented'
 ]
 
-const STATUS_OPTIONS = [
-  { value: 'new', label: 'New', color: 'bg-blue-600' },
-  { value: 'viewed', label: 'Viewed', color: 'bg-yellow-600' },
-  { value: 'interested', label: 'Interested', color: 'bg-green-600' },
-  { value: 'rejected', label: 'Rejected', color: 'bg-red-600' },
-  { value: 'accepted', label: 'Accepted', color: 'bg-purple-600' }
-]
-
 export default function TenantFilter({ inquiries, onFilteredResults, className = '' }: TenantFilterProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [filters, setFilters] = useState<FilterCriteria>(DEFAULT_FILTERS)
@@ -88,23 +59,6 @@ export default function TenantFilter({ inquiries, onFilteredResults, className =
 
   const applyFilters = () => {
     const filtered = inquiries.filter(inquiry => {
-      // Budget range
-      if (inquiry.budget < filters.budgetRange[0] || inquiry.budget > filters.budgetRange[1]) {
-        return false
-      }
-
-      // Income range
-      if (inquiry.income < filters.incomeRange[0] || inquiry.income > filters.incomeRange[1]) {
-        return false
-      }
-
-      // Credit score range
-      if (inquiry.creditScore && 
-          (inquiry.creditScore < filters.creditScoreRange[0] || 
-           inquiry.creditScore > filters.creditScoreRange[1])) {
-        return false
-      }
-
       // Age range
       if (inquiry.tenantProfile.age < filters.ageRange[0] || 
           inquiry.tenantProfile.age > filters.ageRange[1]) {
@@ -132,31 +86,11 @@ export default function TenantFilter({ inquiries, onFilteredResults, className =
         return false
       }
 
-      // Occupations
-      if (filters.occupations.length > 0 && 
-          !filters.occupations.some(occ => 
-            inquiry.occupation.toLowerCase().includes(occ.toLowerCase()) ||
-            inquiry.tenantProfile.profession.toLowerCase().includes(occ.toLowerCase())
-          )) {
-        return false
-      }
-
       // Personality traits
       if (filters.personality.length > 0 && 
           !filters.personality.some(trait => 
             inquiry.tenantProfile.personality.includes(trait)
           )) {
-        return false
-      }
-
-      // Years in city
-      if (inquiry.tenantProfile.yearsInCity < filters.yearsInCity[0] || 
-          inquiry.tenantProfile.yearsInCity > filters.yearsInCity[1]) {
-        return false
-      }
-
-      // Status
-      if (filters.status.length > 0 && !filters.status.includes(inquiry.status)) {
         return false
       }
 
@@ -175,18 +109,12 @@ export default function TenantFilter({ inquiries, onFilteredResults, className =
 
   const updateActiveFiltersCount = () => {
     let count = 0
-    if (filters.budgetRange[0] > 0 || filters.budgetRange[1] < 3000) count++
-    if (filters.incomeRange[0] > 0 || filters.incomeRange[1] < 20000) count++
-    if (filters.creditScoreRange[0] > 300 || filters.creditScoreRange[1] < 850) count++
     if (filters.ageRange[0] > 18 || filters.ageRange[1] < 65) count++
     if (filters.familySize.length > 0) count++
     if (filters.hasChildren !== null) count++
     if (filters.hasPets !== null) count++
     if (filters.smokingStatus.length > 0) count++
-    if (filters.occupations.length > 0) count++
     if (filters.personality.length > 0) count++
-    if (filters.yearsInCity[0] > 0 || filters.yearsInCity[1] < 20) count++
-    if (filters.status.length > 0) count++
     setActiveFiltersCount(count)
   }
 
@@ -238,72 +166,7 @@ export default function TenantFilter({ inquiries, onFilteredResults, className =
                   </Button>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {/* Financial Criteria */}
-                  <Card className="bg-gray-800/50 border-gray-700">
-                    <CardHeader>
-                      <CardTitle className="text-white flex items-center gap-2">
-                        <Euro className="h-4 w-4" />
-                        Financial
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div>
-                        <Label className="text-gray-300">Budget Range (€/month)</Label>
-                        <div className="px-2 py-4">
-                          <Slider
-                            value={filters.budgetRange}
-                            onValueChange={(value) => updateFilter('budgetRange', value)}
-                            max={3000}
-                            min={0}
-                            step={50}
-                            className="w-full"
-                          />
-                          <div className="flex justify-between text-sm text-gray-400 mt-1">
-                            <span>€{filters.budgetRange[0]}</span>
-                            <span>€{filters.budgetRange[1]}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div>
-                        <Label className="text-gray-300">Monthly Income (€)</Label>
-                        <div className="px-2 py-4">
-                          <Slider
-                            value={filters.incomeRange}
-                            onValueChange={(value) => updateFilter('incomeRange', value)}
-                            max={20000}
-                            min={0}
-                            step={100}
-                            className="w-full"
-                          />
-                          <div className="flex justify-between text-sm text-gray-400 mt-1">
-                            <span>€{filters.incomeRange[0]}</span>
-                            <span>€{filters.incomeRange[1]}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div>
-                        <Label className="text-gray-300">Credit Score</Label>
-                        <div className="px-2 py-4">
-                          <Slider
-                            value={filters.creditScoreRange}
-                            onValueChange={(value) => updateFilter('creditScoreRange', value)}
-                            max={850}
-                            min={300}
-                            step={10}
-                            className="w-full"
-                          />
-                          <div className="flex justify-between text-sm text-gray-400 mt-1">
-                            <span>{filters.creditScoreRange[0]}</span>
-                            <span>{filters.creditScoreRange[1]}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Demographics */}
                   <Card className="bg-gray-800/50 border-gray-700">
                     <CardHeader>
@@ -387,7 +250,7 @@ export default function TenantFilter({ inquiries, onFilteredResults, className =
                     </CardContent>
                   </Card>
 
-                  {/* Lifestyle & Preferences */}
+                  {/* Lifestyle */}
                   <Card className="bg-gray-800/50 border-gray-700">
                     <CardHeader>
                       <CardTitle className="text-white flex items-center gap-2">
@@ -395,7 +258,7 @@ export default function TenantFilter({ inquiries, onFilteredResults, className =
                         Lifestyle
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-4">
+                    <CardContent>
                       <div>
                         <Label className="text-gray-300">Smoking Status</Label>
                         <div className="space-y-2 mt-2">
@@ -417,51 +280,6 @@ export default function TenantFilter({ inquiries, onFilteredResults, className =
                             </div>
                           ))}
                         </div>
-                      </div>
-
-                      <div>
-                        <Label className="text-gray-300">Years in City</Label>
-                        <div className="px-2 py-4">
-                          <Slider
-                            value={filters.yearsInCity}
-                            onValueChange={(value) => updateFilter('yearsInCity', value)}
-                            max={20}
-                            min={0}
-                            step={1}
-                            className="w-full"
-                          />
-                          <div className="flex justify-between text-sm text-gray-400 mt-1">
-                            <span>{filters.yearsInCity[0]} years</span>
-                            <span>{filters.yearsInCity[1]}+ years</span>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Professional */}
-                  <Card className="bg-gray-800/50 border-gray-700">
-                    <CardHeader>
-                      <CardTitle className="text-white flex items-center gap-2">
-                        <Briefcase className="h-4 w-4" />
-                        Professional
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div>
-                        <Label className="text-gray-300">Occupation Keywords</Label>
-                        <Input
-                          placeholder="e.g., engineer, doctor, teacher"
-                          value={filters.occupations.join(', ')}
-                          onChange={(e) => {
-                            const occupations = e.target.value
-                              .split(',')
-                              .map(o => o.trim())
-                              .filter(o => o)
-                            updateFilter('occupations', occupations)
-                          }}
-                          className="bg-gray-800/50 border-gray-700 text-white mt-2"
-                        />
                       </div>
                     </CardContent>
                   </Card>
@@ -492,41 +310,6 @@ export default function TenantFilter({ inquiries, onFilteredResults, className =
                               />
                               <label htmlFor={`trait-${trait}`} className="text-gray-300 text-xs">
                                 {trait}
-                              </label>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Status */}
-                  <Card className="bg-gray-800/50 border-gray-700">
-                    <CardHeader>
-                      <CardTitle className="text-white flex items-center gap-2">
-                        <UserCheck className="h-4 w-4" />
-                        Status
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div>
-                        <Label className="text-gray-300">Inquiry Status</Label>
-                        <div className="space-y-2 mt-2">
-                          {STATUS_OPTIONS.map((status) => (
-                            <div key={status.value} className="flex items-center space-x-2">
-                              <Checkbox
-                                id={`status-${status.value}`}
-                                checked={filters.status.includes(status.value)}
-                                onCheckedChange={(checked) => {
-                                  const newStatus = checked
-                                    ? [...filters.status, status.value]
-                                    : filters.status.filter(s => s !== status.value)
-                                  updateFilter('status', newStatus)
-                                }}
-                              />
-                              <label htmlFor={`status-${status.value}`} className="text-gray-300 text-sm flex items-center gap-2">
-                                <div className={`w-2 h-2 rounded-full ${status.color}`}></div>
-                                {status.label}
                               </label>
                             </div>
                           ))}

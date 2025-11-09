@@ -30,8 +30,6 @@ import {
   Users,
   Heart,
   MessageSquare,
-  Phone,
-  Mail,
   MoreVertical,
   TrendingUp,
   AlertCircle,
@@ -531,15 +529,7 @@ function PropertiesPageContent() {
                         {/* Actions */}
                         <div className="flex items-center justify-between pt-4 border-t border-gray-700">
                           <div className="flex items-center gap-2">
-                            <Button size="sm" variant="outline" className="border-gray-600 text-gray-300">
-                              <Phone className="mr-2 h-3 w-3" />
-                              Call
-                            </Button>
-                            <Button size="sm" variant="outline" className="border-gray-600 text-gray-300">
-                              <Mail className="mr-2 h-3 w-3" />
-                              Email
-                            </Button>
-                            <Button size="sm" variant="outline" className="border-gray-600 text-gray-300">
+                            <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
                               <MessageSquare className="mr-2 h-3 w-3" />
                               Message
                             </Button>

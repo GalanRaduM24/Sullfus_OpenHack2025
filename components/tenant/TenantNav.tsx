@@ -16,10 +16,7 @@ import {
   FileText, 
   Menu, 
   X,
-  Sparkles,
-  User,
-  Bell,
-  Settings
+  User
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
@@ -32,10 +29,11 @@ export default function TenantNav() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const navItems = [
-    { href: '/tenant', label: 'Dashboard', icon: Home, gradient: 'from-blue-500 to-cyan-500' },
-    { href: '/tenant/search', label: 'Discover', icon: Search, gradient: 'from-purple-500 to-pink-500' },
-    { href: '/tenant/favorites', label: 'Saved', icon: Heart, gradient: 'from-red-500 to-orange-500' },
-    { href: '/tenant/applications', label: 'Applications', icon: FileText, gradient: 'from-green-500 to-emerald-500' },
+    { href: '/tenant', label: 'Dashboard', icon: Home },
+    { href: '/tenant/search', label: 'Discover', icon: Search },
+    { href: '/tenant/favorites', label: 'Saved', icon: Heart },
+    { href: '/tenant/applications', label: 'Applications', icon: FileText },
+    { href: '/tenant/profile', label: 'Profile', icon: User },
   ]
 
   const handleSignOut = async () => {
@@ -44,67 +42,53 @@ export default function TenantNav() {
   }
 
   return (
-    <motion.nav
-      initial={{ y: -20, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.3 }}
-      className="sticky top-0 z-50 w-full bg-black/80 backdrop-blur-xl border-b border-gray-800"
-    >
+    <nav className="sticky top-0 z-50 w-full bg-black/80 backdrop-blur-xl border-b border-gray-900">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link href="/tenant" className="flex items-center gap-3 group">
             <motion.div
-              whileHover={{ rotate: [0, -10, 10, -10, 0] }}
-              transition={{ duration: 0.5 }}
-              className="relative w-8 h-8"
+              whileHover={{ scale: 1.05 }}
+              transition={{ duration: 0.2 }}
+              className="relative w-[40px] h-[40px]"
             >
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                <Sparkles className="w-4 h-4 text-white" />
-              </div>
+              <Image
+                src="/assets/Icon.svg"
+                alt="RentHub Logo"
+                fill
+                className="object-contain scale-150"
+                style={{ filter: 'brightness(0) saturate(100%) invert(35%) sepia(67%) saturate(1000%) hue-rotate(180deg) brightness(95%) contrast(85%)' }}
+                priority
+              />
             </motion.div>
             <div className="flex items-center gap-2">
-              <span className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+              <span className="text-xl font-bold text-white">
                 RentHub
               </span>
-              <span className="text-xs px-2 py-1 bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-blue-300 rounded-full border border-blue-500/30">
+              <span className="text-xs px-2 py-1 bg-blue-600/20 text-blue-400 rounded-full border border-blue-600/30">
                 Tenant
               </span>
             </div>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-2">
+          <div className="hidden md:flex items-center gap-1">
             {navItems.map((item) => {
               const isActive = pathname === item.href
               const Icon = item.icon
               return (
                 <Link key={item.href} href={item.href}>
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={cn(
+                      "text-gray-400 hover:text-white hover:bg-gray-800/50 transition-colors",
+                      isActive && "bg-white text-black hover:bg-white hover:text-black"
+                    )}
                   >
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className={cn(
-                        "relative overflow-hidden text-gray-300 hover:text-white transition-all duration-300",
-                        isActive && "text-white"
-                      )}
-                    >
-                      {isActive && (
-                        <motion.div
-                          layoutId="activeTab"
-                          className={`absolute inset-0 bg-gradient-to-r ${item.gradient} opacity-20 rounded-md`}
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 0.2 }}
-                          exit={{ opacity: 0 }}
-                        />
-                      )}
-                      <Icon className="mr-2 h-4 w-4" />
-                      {item.label}
-                    </Button>
-                  </motion.div>
+                    <Icon className="mr-2 h-4 w-4" />
+                    {item.label}
+                  </Button>
                 </Link>
               )
             })}
@@ -115,23 +99,11 @@ export default function TenantNav() {
             {!loading && (
               <>
                 {user ? (
-                  <div className="flex items-center gap-3">
-                    {/* Notifications */}
-                    <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-gray-300 hover:text-white p-2"
-                      >
-                        <Bell className="h-4 w-4" />
-                      </Button>
-                    </motion.div>
-
-                    {/* User Avatar */}
-                    <div className="flex items-center gap-2">
-                      <Avatar className="w-8 h-8 border-2 border-gradient-to-r from-blue-500 to-purple-500">
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-900 rounded-lg border border-gray-800">
+                      <Avatar className="w-7 h-7">
                         <AvatarImage src={user.photoURL || undefined} />
-                        <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xs">
+                        <AvatarFallback className="bg-blue-600 text-white text-xs">
                           {user.displayName?.charAt(0) || user.email?.charAt(0) || 'U'}
                         </AvatarFallback>
                       </Avatar>
@@ -140,22 +112,20 @@ export default function TenantNav() {
                       </span>
                     </div>
 
-                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={handleSignOut}
-                        className="text-gray-300 hover:text-red-400 transition-colors"
-                      >
-                        <LogOut className="mr-2 h-4 w-4" />
-                        Sign Out
-                      </Button>
-                    </motion.div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleSignOut}
+                      className="text-gray-400 hover:text-white hover:bg-gray-800/50"
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Sign Out
+                    </Button>
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
                     <Link href="/auth/signin">
-                      <Button variant="ghost" size="sm" className="text-gray-300 hover:text-white">
+                      <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white hover:bg-gray-800/50">
                         <LogIn className="mr-2 h-4 w-4" />
                         Sign In
                       </Button>
@@ -163,7 +133,7 @@ export default function TenantNav() {
                     <Link href="/auth/signup">
                       <Button 
                         size="sm" 
-                        className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0"
+                        className="bg-blue-600 hover:bg-blue-700 text-white"
                       >
                         <UserPlus className="mr-2 h-4 w-4" />
                         Get Started
@@ -191,36 +161,35 @@ export default function TenantNav() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="md:hidden border-t border-gray-800 py-4"
+              className="md:hidden border-t border-gray-900 py-4"
             >
-              <div className="space-y-2">
+              <div className="space-y-1">
                 {navItems.map((item) => {
                   const isActive = pathname === item.href
                   const Icon = item.icon
                   return (
                     <Link key={item.href} href={item.href} onClick={() => setMobileMenuOpen(false)}>
-                      <motion.div
-                        whileHover={{ x: 4 }}
+                      <div
                         className={cn(
-                          "flex items-center gap-3 px-4 py-3 text-gray-300 hover:text-white transition-all rounded-lg",
-                          isActive && "text-white bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30"
+                          "flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-900 transition-colors rounded-lg",
+                          isActive && "bg-white text-black hover:bg-white hover:text-black"
                         )}
                       >
                         <Icon className="h-5 w-5" />
                         <span>{item.label}</span>
-                      </motion.div>
+                      </div>
                     </Link>
                   )
                 })}
                 
                 {!loading && (
-                  <div className="pt-4 border-t border-gray-800 space-y-2">
+                  <div className="pt-4 border-t border-gray-900 space-y-1 mt-2">
                     {user ? (
                       <>
-                        <div className="flex items-center gap-3 px-4 py-2">
-                          <Avatar className="w-8 h-8">
+                        <div className="flex items-center gap-3 px-4 py-2 bg-gray-900 rounded-lg mx-2">
+                          <Avatar className="w-7 h-7">
                             <AvatarImage src={user.photoURL || undefined} />
-                            <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xs">
+                            <AvatarFallback className="bg-blue-600 text-white text-xs">
                               {user.displayName?.charAt(0) || user.email?.charAt(0) || 'U'}
                             </AvatarFallback>
                           </Avatar>
@@ -230,7 +199,7 @@ export default function TenantNav() {
                         </div>
                         <button
                           onClick={handleSignOut}
-                          className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:text-red-400 transition-colors w-full text-left"
+                          className="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-900 transition-colors w-full text-left rounded-lg"
                         >
                           <LogOut className="h-5 w-5" />
                           <span>Sign Out</span>
@@ -239,13 +208,13 @@ export default function TenantNav() {
                     ) : (
                       <>
                         <Link href="/auth/signin" onClick={() => setMobileMenuOpen(false)}>
-                          <div className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:text-white transition-colors">
+                          <div className="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-900 transition-colors rounded-lg">
                             <LogIn className="h-5 w-5" />
                             <span>Sign In</span>
                           </div>
                         </Link>
                         <Link href="/auth/signup" onClick={() => setMobileMenuOpen(false)}>
-                          <div className="flex items-center gap-3 px-4 py-3 text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg mx-4">
+                          <div className="flex items-center gap-3 px-4 py-3 text-white bg-blue-600 hover:bg-blue-700 rounded-lg mx-2">
                             <UserPlus className="h-5 w-5" />
                             <span>Get Started</span>
                           </div>
@@ -259,6 +228,6 @@ export default function TenantNav() {
           )}
         </AnimatePresence>
       </div>
-    </motion.nav>
+    </nav>
   )
 }

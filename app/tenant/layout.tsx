@@ -75,17 +75,17 @@ export default function TenantLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-950">
       <TenantNav />
       {!user ? null : hasProfile === false ? (
-        <div className="p-4 bg-yellow-50 border-b border-yellow-200">
+        <div className="p-4 bg-blue-900/20 border-b border-blue-800/50">
           <div className="container mx-auto flex items-center justify-between">
             <div>
-              <strong className="block">Create your Tenant profile</strong>
-              <div className="text-sm text-muted-foreground">Create a tenant profile to like properties and make applications.</div>
+              <strong className="block text-white">Create your Tenant profile</strong>
+              <div className="text-sm text-gray-400">Create a tenant profile to like properties and make applications.</div>
             </div>
             <div>
-              <Button onClick={createTenantProfile} disabled={creating}>
+              <Button onClick={createTenantProfile} disabled={creating} className="bg-blue-600 hover:bg-blue-700">
                 {creating ? 'Creating…' : 'Create Tenant Profile'}
               </Button>
             </div>
