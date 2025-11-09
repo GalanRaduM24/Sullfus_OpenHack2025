@@ -39,12 +39,22 @@ export default function Header() {
 
           {/* Desktop Menu */}
           <div className="hidden sm:flex items-center gap-3 lg:gap-4">
-            <Link href="/select-role">
+            <Link href="/tenant">
+              <Button variant="ghost" className="text-gray-300 hover:text-white hover:bg-gray-900 text-sm lg:text-base">
+                Browse Properties
+              </Button>
+            </Link>
+            <Link href="/landlord">
+              <Button variant="ghost" className="text-gray-300 hover:text-white hover:bg-gray-900 text-sm lg:text-base">
+                List Property
+              </Button>
+            </Link>
+            <Link href="/auth/signin">
               <Button variant="ghost" className="text-gray-300 hover:text-white hover:bg-gray-900 text-sm lg:text-base">
                 Sign in
               </Button>
             </Link>
-            <Link href="/select-role">
+            <Link href="/auth/signup">
               <Button className="bg-white text-black hover:bg-gray-100 border-0 text-sm lg:text-base px-4 lg:px-6">
                 Get started
               </Button>
@@ -68,12 +78,22 @@ export default function Header() {
             exit={{ opacity: 0, height: 0 }}
             className="sm:hidden border-t border-gray-900 py-4 space-y-3"
           >
-            <Link href="/select-role" onClick={() => setMobileMenuOpen(false)}>
+            <Link href="/tenant" onClick={() => setMobileMenuOpen(false)}>
+              <Button variant="ghost" className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-900">
+                Browse Properties
+              </Button>
+            </Link>
+            <Link href="/landlord" onClick={() => setMobileMenuOpen(false)}>
+              <Button variant="ghost" className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-900">
+                List Property
+              </Button>
+            </Link>
+            <Link href="/auth/signin" onClick={() => setMobileMenuOpen(false)}>
               <Button variant="ghost" className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-900">
                 Sign in
               </Button>
             </Link>
-            <Link href="/select-role" onClick={() => setMobileMenuOpen(false)}>
+            <Link href="/auth/signup" onClick={() => setMobileMenuOpen(false)}>
               <Button className="w-full bg-white text-black">
                 Get started
               </Button>

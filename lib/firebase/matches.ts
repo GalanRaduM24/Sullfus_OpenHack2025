@@ -13,7 +13,7 @@ import {
   or,
   serverTimestamp,
 } from 'firebase/firestore'
-import { db } from '@/firebase/config'
+import { db } from './config'
 
 export interface Match {
   id?: string

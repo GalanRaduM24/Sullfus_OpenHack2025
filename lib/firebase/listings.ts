@@ -16,7 +16,7 @@ import {
   serverTimestamp,
   Timestamp,
 } from 'firebase/firestore'
-import { db } from '@/firebase/config'
+import { db } from './config'
 
 export interface PropertyListing {
   id?: string

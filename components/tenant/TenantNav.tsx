@@ -1,20 +1,25 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Home, Heart, MessageSquare, User } from 'lucide-react'
+import { Home, LogOut, LogIn, UserPlus } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function TenantNav() {
   const pathname = usePathname()
+  const router = useRouter()
+  const { user, signOut, loading } = useAuth()
 
   const navItems = [
     { href: '/tenant', label: 'Home', icon: Home },
-    { href: '/tenant/swipe', label: 'Swipe', icon: Heart },
-    { href: '/tenant/matches', label: 'Matches', icon: MessageSquare },
-    { href: '/tenant/profile', label: 'Profile', icon: User },
   ]
+
+  const handleSignOut = async () => {
+    await signOut()
+    router.push('/')
+  }
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -26,7 +31,7 @@ export default function TenantNav() {
             <span className="text-sm text-muted-foreground">Tenant</span>
           </Link>
 
-          <div className="flex items-center space-x-1">
+          <div className="flex items-center space-x-2">
             {navItems.map((item) => {
               const isActive = pathname === item.href
               const Icon = item.icon
@@ -45,6 +50,35 @@ export default function TenantNav() {
                 </Link>
               )
             })}
+            {!loading && (
+              <>
+                {user ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleSignOut}
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Sign Out
+                  </Button>
+                ) : (
+                  <>
+                    <Link href="/auth/signin">
+                      <Button variant="ghost" size="sm">
+                        <LogIn className="mr-2 h-4 w-4" />
+                        Sign In
+                      </Button>
+                    </Link>
+                    <Link href="/auth/signup">
+                      <Button size="sm">
+                        <UserPlus className="mr-2 h-4 w-4" />
+                        Sign Up
+                      </Button>
+                    </Link>
+                  </>
+                )}
+              </>
+            )}
           </div>
         </div>
       </div>

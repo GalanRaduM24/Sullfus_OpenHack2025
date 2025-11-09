@@ -15,7 +15,7 @@ import {
   onSnapshot,
   Unsubscribe,
 } from 'firebase/firestore'
-import { db } from '@/firebase/config'
+import { db } from './config'
 
 export interface Message {
   id?: string

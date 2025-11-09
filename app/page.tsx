@@ -254,7 +254,7 @@ export default function Home() {
                 >
                   The rental app that cuts through the noise.
                   <br />
-                  <span className="text-white font-semibold">Real matches. Real fast.</span>
+                  <span className="text-white font-semibold">Real people. Real places.</span>
                 </motion.p>
 
                 <motion.div

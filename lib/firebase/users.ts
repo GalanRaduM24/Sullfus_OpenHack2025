@@ -9,7 +9,7 @@ import {
   updateDoc,
   serverTimestamp 
 } from 'firebase/firestore'
-import { db } from '@/firebase/config'
+import { db } from './config'
 
 export type UserRole = 'tenant' | 'landlord'
 
@@ -34,6 +34,8 @@ export interface TenantProfile extends BaseUserProfile {
   responsivenessScore?: number
   verificationStatus?: 'unverified' | 'video_verified'
   introVideoUrl?: string
+  profileComplete?: boolean
+  idVerificationStatus?: 'not_verified' | 'pending' | 'verified' | 'rejected'
 }
 
 export interface LandlordProfile extends BaseUserProfile {
@@ -43,6 +45,8 @@ export interface LandlordProfile extends BaseUserProfile {
   businessVerified?: boolean
   profilePhotoUrl?: string
   rating?: number
+  profileComplete?: boolean
+  idVerificationStatus?: 'not_verified' | 'pending' | 'verified' | 'rejected'
 }
 
 export type UserProfile = TenantProfile | LandlordProfile
@@ -61,6 +65,42 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
     return null
   } catch (error) {
     console.error('Error getting user profile:', error)
+    throw error
+  }
+}
+
+/**
+ * Get tenant profile
+ */
+export async function getTenantProfile(userId: string): Promise<TenantProfile | null> {
+  try {
+    const profileRef = doc(db, 'tenantProfiles', userId)
+    const profileSnap = await getDoc(profileRef)
+    
+    if (profileSnap.exists()) {
+      return { id: profileSnap.id, ...profileSnap.data() } as TenantProfile
+    }
+    return null
+  } catch (error) {
+    console.error('Error getting tenant profile:', error)
+    throw error
+  }
+}
+
+/**
+ * Get landlord profile
+ */
+export async function getLandlordProfile(userId: string): Promise<LandlordProfile | null> {
+  try {
+    const profileRef = doc(db, 'landlordProfiles', userId)
+    const profileSnap = await getDoc(profileRef)
+    
+    if (profileSnap.exists()) {
+      return { id: profileSnap.id, ...profileSnap.data() } as LandlordProfile
+    }
+    return null
+  } catch (error) {
+    console.error('Error getting landlord profile:', error)
     throw error
   }
 }
