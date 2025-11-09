@@ -10,9 +10,8 @@ import { useProfileVerification } from '@/hooks/useProfileVerification'
 import { LandlordProfileForm } from '@/components/profile/LandlordProfileForm'
 import { IDVerificationPrompt } from '@/components/profile/IDVerificationPrompt'
 import { ProfileVerificationCard } from '@/components/profile/ProfileVerificationCard'
-import { LandlordScoreCard } from '@/components/landlord/LandlordScoreCard'
 import Link from 'next/link'
-import { Plus, LogIn, CheckCircle, AlertCircle, Building2, Users, TrendingUp, Star, Sparkles, ArrowRight, Home, Eye, User } from 'lucide-react'
+import { Plus, LogIn, AlertCircle, Building2, Users, User } from 'lucide-react'
 
 interface LandlordProfile {
   role: 'landlord'
@@ -133,19 +132,6 @@ export default function LandlordDashboard() {
             onSkip={() => setShowIDVerification(false)}
           />
         )}
-
-          {/* Landlord Score Card */}
-          {user && isIdVerified && !showProfileForm && !showIDVerification && profile && (
-            <LandlordScoreCard 
-              profileData={{
-                name: profile.name || '',
-                age: (profile as any).age,
-                description: (profile as any).description,
-                idVerificationStatus: profile.idVerificationStatus || 'not_verified',
-                properties: []
-              }}
-            />
-          )}
 
           {/* Quick Actions */}
           {user && isIdVerified && !showProfileForm && !showIDVerification && (

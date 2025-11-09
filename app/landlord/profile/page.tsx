@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useAuth } from '@/contexts/AuthContext'
-import { getUserProfile } from '@/lib/firebase/users'
+import { useProfileVerification } from '@/hooks/useProfileVerification'
 import { getIDVerificationStatus, IDCardDocument } from '@/lib/firebase/id-verification'
 import { LandlordProfileForm } from '@/components/profile/LandlordProfileForm'
 import { IDVerificationPrompt } from '@/components/profile/IDVerificationPrompt'
@@ -25,98 +25,31 @@ import {
   Building2
 } from 'lucide-react'
 
-interface LandlordProfile {
-  role: 'landlord'
-  name: string
-  email: string
-  phone?: string
-  age?: number
-  description?: string
-  partnerAgencies?: string
-  profileCompleted?: boolean
-  idVerificationStatus?: 'not_verified' | 'pending' | 'verified' | 'rejected'
-  createdAt?: any
-  updatedAt?: any
-}
-
 export default function LandlordProfilePage() {
-  const { user, loading: authLoading } = useAuth()
-  const [profile, setProfile] = useState<LandlordProfile | null>(null)
-  const [idVerification, setIdVerification] = useState<IDCardDocument | null>(null)
-  const [loading, setLoading] = useState(true)
+  const { user } = useAuth()
   const [showEditForm, setShowEditForm] = useState(false)
   const [showIDVerification, setShowIDVerification] = useState(false)
 
-  useEffect(() => {
-    if (user) {
-      loadProfileData()
-    } else {
-      setLoading(false)
-    }
-  }, [user])
-
-  const loadProfileData = async () => {
-    if (!user) return
-
-    try {
-      setLoading(true)
-      
-      // Load profile
-      const userProfile = await getUserProfile(user.uid)
-      if (userProfile && userProfile.role === 'landlord') {
-        setProfile(userProfile as LandlordProfile)
-      }
-
-      // Load ID verification status
-      const idStatus = await getIDVerificationStatus(user.uid)
-      setIdVerification(idStatus)
-    } catch (error) {
-      console.error('Error loading profile data:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+  // Use the same hook as dashboard for consistency
+  const {
+    profile,
+    loading,
+    isIdVerified,
+    idVerificationStatus
+  } = useProfileVerification('landlord')
 
   const handleProfileUpdate = () => {
     setShowEditForm(false)
-    loadProfileData()
+    // The hook will automatically reload
   }
 
   const handleIDVerificationComplete = () => {
     setShowIDVerification(false)
-    loadProfileData()
+    // The hook will automatically reload
   }
 
   const getVerificationStatusBadge = () => {
-    // Check idVerification object first (most reliable)
-    if (idVerification) {
-      switch (idVerification.verificationStatus) {
-        case 'verified':
-          return (
-            <Badge className="bg-green-500 hover:bg-green-600">
-              <CheckCircle className="mr-1 h-3 w-3" />
-              Verified
-            </Badge>
-          )
-        case 'pending':
-          return (
-            <Badge className="bg-yellow-500 hover:bg-yellow-600">
-              <Clock className="mr-1 h-3 w-3" />
-              Pending Review
-            </Badge>
-          )
-        case 'rejected':
-          return (
-            <Badge className="bg-red-500 hover:bg-red-600">
-              <XCircle className="mr-1 h-3 w-3" />
-              Rejected
-            </Badge>
-          )
-      }
-    }
-    
-    // Fallback to profile status
-    switch (profile?.idVerificationStatus) {
+    switch (idVerificationStatus) {
       case 'verified':
         return (
           <Badge className="bg-green-500 hover:bg-green-600">
@@ -148,7 +81,7 @@ export default function LandlordProfilePage() {
     }
   }
 
-  if (authLoading || loading) {
+  if (loading) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-center min-h-[400px]">
@@ -184,7 +117,7 @@ export default function LandlordProfilePage() {
           </Button>
           <LandlordProfileForm
             userId={user.uid}
-            initialData={profile || undefined}
+            initialData={profile?.role === 'landlord' ? profile : undefined}
             onComplete={handleProfileUpdate}
           />
         </div>
@@ -230,15 +163,17 @@ export default function LandlordProfilePage() {
         </div>
 
         {/* Landlord Score Card */}
-        <LandlordScoreCard
-          profileData={{
-            name: profile?.name,
-            age: profile?.age,
-            description: profile?.description,
-            idVerificationStatus: profile?.idVerificationStatus,
-            properties: [], // TODO: Load actual properties
-          }}
-        />
+        {profile && (
+          <LandlordScoreCard
+            profileData={{
+              name: profile.name || '',
+              age: (profile as any).age,
+              description: (profile as any).description,
+              idVerificationStatus: idVerificationStatus,
+              properties: [], // TODO: Load actual properties
+            }}
+          />
+        )}
 
         {/* Profile Information */}
         <Card>
@@ -275,7 +210,7 @@ export default function LandlordProfilePage() {
                 <Phone className="h-5 w-5 text-muted-foreground mt-0.5" />
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Phone</p>
-                  <p className="text-base">{profile?.phone || 'Not provided'}</p>
+                  <p className="text-base">Not provided</p>
                 </div>
               </div>
 
@@ -294,7 +229,7 @@ export default function LandlordProfilePage() {
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Profile Status</p>
                   <p className="text-base">
-                    {profile?.profileCompleted ? (
+                    {profile?.profileComplete ? (
                       <span className="text-green-600 font-medium">Complete</span>
                     ) : (
                       <span className="text-amber-600 font-medium">Incomplete</span>
@@ -320,14 +255,14 @@ export default function LandlordProfilePage() {
             )}
 
             {/* Partner Agencies */}
-            {profile?.partnerAgencies && (
+            {(profile as any)?.partnerAgencies && (
               <div className="pt-4 border-t">
                 <div className="flex items-start gap-3">
                   <Building2 className="h-5 w-5 text-muted-foreground mt-0.5" />
                   <div className="flex-1">
                     <p className="text-sm font-medium text-muted-foreground mb-1">Partner Agencies</p>
                     <p className="text-base text-muted-foreground">
-                      {profile.partnerAgencies}
+                      {(profile as any).partnerAgencies}
                     </p>
                   </div>
                 </div>
