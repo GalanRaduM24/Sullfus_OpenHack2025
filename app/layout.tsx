@@ -6,7 +6,7 @@ import { AuthProvider } from '@/contexts/AuthContext'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Rently - Smart Rental Matching',
+  title: 'RentHub - Smart Rental Matching',
   description: 'Connect tenants and landlords efficiently',
 }
 

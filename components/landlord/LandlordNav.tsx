@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Building2, LogOut, LogIn, UserPlus } from 'lucide-react'
+import { Building2, LogOut, LogIn, User, UserPlus, Home, Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
 
@@ -13,7 +13,10 @@ export default function LandlordNav() {
   const { user, signOut, loading } = useAuth()
 
   const navItems = [
-    { href: '/landlord', label: 'Home', icon: Building2 },
+    { href: '/landlord', label: 'Dashboard', icon: Building2 },
+    { href: '/landlord/properties', label: 'Properties', icon: Home },
+    { href: '/landlord/add-property', label: 'Add Property', icon: Plus },
+    { href: '/landlord/profile', label: 'Profile', icon: User },
   ]
 
   const handleSignOut = async () => {
@@ -27,7 +30,7 @@ export default function LandlordNav() {
         <div className="flex h-16 items-center justify-between">
           <Link href="/landlord" className="flex items-center space-x-2">
             <Building2 className="h-6 w-6 text-primary" />
-            <span className="text-xl font-bold">Rently</span>
+            <span className="text-xl font-bold">RentHub</span>
             <span className="text-sm text-muted-foreground">Landlord</span>
           </Link>
 

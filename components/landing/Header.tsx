@@ -27,14 +27,14 @@ export default function Header() {
             >
               <Image
                 src="/assets/Icon.svg"
-                alt="Rently Logo"
+                alt="RentHub Logo"
                 fill
                 className="object-contain scale-150"
                 style={{ filter: 'brightness(0) saturate(100%) invert(35%) sepia(67%) saturate(1000%) hue-rotate(180deg) brightness(95%) contrast(85%)' }}
                 priority
               />
             </motion.div>
-            <span className="text-lg sm:text-xl font-bold text-white">Rently</span>
+            <span className="text-lg sm:text-xl font-bold text-white">RentHub</span>
           </Link>
 
           {/* Desktop Menu */}

@@ -24,27 +24,18 @@ export interface BaseUserProfile {
 
 export interface TenantProfile extends BaseUserProfile {
   role: 'tenant'
-  age?: number
-  occupation?: string
-  budgetMin?: number
-  budgetMax?: number
-  preferredLocations?: string[]
-  hasPets?: boolean
-  profilePhotoUrl?: string
-  responsivenessScore?: number
-  verificationStatus?: 'unverified' | 'video_verified'
-  introVideoUrl?: string
+  age: number
+  occupation: string
+  description: string
   profileComplete?: boolean
   idVerificationStatus?: 'not_verified' | 'pending' | 'verified' | 'rejected'
 }
 
 export interface LandlordProfile extends BaseUserProfile {
   role: 'landlord'
-  contactEmail?: string
-  description?: string
-  businessVerified?: boolean
-  profilePhotoUrl?: string
-  rating?: number
+  age: number
+  description: string
+  partnerAgencies?: string
   profileComplete?: boolean
   idVerificationStatus?: 'not_verified' | 'pending' | 'verified' | 'rejected'
 }

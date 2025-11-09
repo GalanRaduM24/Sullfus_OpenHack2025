@@ -1,79 +1,45 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/contexts/AuthContext'
-import { getTenantProfile } from '@/lib/firebase/users'
-import { TenantProfile } from '@/lib/firebase/users'
-import { isTenantProfileComplete } from '@/lib/utils/profile-completion'
 import { TenantProfileForm } from '@/components/profile/TenantProfileForm'
 import { IDVerificationPrompt } from '@/components/profile/IDVerificationPrompt'
+import { ProfileVerificationCard } from '@/components/profile/ProfileVerificationCard'
+import { useProfileVerification } from '@/hooks/useProfileVerification'
 import Link from 'next/link'
-import { Heart, LogIn, CheckCircle } from 'lucide-react'
+import { Heart, LogIn, CheckCircle, Search, Home, Euro, Clock } from 'lucide-react'
 
 export default function TenantDashboard() {
   const { user, loading } = useAuth()
-  const [profile, setProfile] = useState<TenantProfile | null>(null)
-  const [profileLoading, setProfileLoading] = useState(true)
   const [showProfileForm, setShowProfileForm] = useState(false)
   const [showIDVerification, setShowIDVerification] = useState(false)
-  const [profileComplete, setProfileComplete] = useState(false)
-
-  useEffect(() => {
-    const loadProfile = async () => {
-      if (!user) {
-        setProfileLoading(false)
-        return
-      }
-
-      try {
-        const tenantProfile = await getTenantProfile(user.uid)
-        setProfile(tenantProfile)
-        
-        if (tenantProfile) {
-          const isComplete = isTenantProfileComplete(tenantProfile)
-          setProfileComplete(isComplete)
-          setShowProfileForm(!isComplete)
-          
-          // Show ID verification after profile is complete (if not already verified)
-          if (isComplete && tenantProfile.idVerificationStatus !== 'verified') {
-            setShowIDVerification(true)
-          }
-        } else {
-          // No profile exists, show form
-          setShowProfileForm(true)
-        }
-      } catch (error) {
-        console.error('Error loading profile:', error)
-      } finally {
-        setProfileLoading(false)
-      }
-    }
-
-    loadProfile()
-  }, [user])
+  
+  const {
+    profile,
+    needsProfileCompletion,
+    needsIdVerification,
+    isIdVerified,
+    loading: profileLoading
+  } = useProfileVerification('tenant')
 
   const handleProfileComplete = () => {
     setShowProfileForm(false)
-    setProfileComplete(true)
-    setShowIDVerification(true)
-    // Reload profile
-    if (user) {
-      getTenantProfile(user.uid).then(setProfile)
-    }
-  }
-
-  const handleIDVerificationSkip = () => {
-    setShowIDVerification(false)
+    // The hook will automatically update the state
   }
 
   const handleIDVerificationComplete = () => {
     setShowIDVerification(false)
-    // Reload profile
-    if (user) {
-      getTenantProfile(user.uid).then(setProfile)
-    }
+    // The hook will automatically update the state
+  }
+
+  const handleCompleteProfile = () => {
+    setShowProfileForm(true)
+  }
+
+  const handleVerifyIdentity = () => {
+    setShowIDVerification(true)
   }
 
   if (profileLoading || loading) {
@@ -92,7 +58,7 @@ export default function TenantDashboard() {
         <div className="space-y-2">
           <h1 className="text-4xl font-bold">Browse Properties 👋</h1>
           <p className="text-muted-foreground text-lg">
-            {user ? `Welcome back${profile?.fullName ? `, ${profile.fullName}` : ''}!` : 'Browse available properties. Sign in to like properties and connect with landlords.'}
+            {user ? `Welcome back${profile?.name ? `, ${profile.name}` : ''}!` : 'Browse available properties. Sign in to like properties and connect with landlords.'}
           </p>
         </div>
 
@@ -120,76 +86,99 @@ export default function TenantDashboard() {
           </Card>
         )}
 
+        {/* Profile Verification Card - Only shows when user needs to complete profile or verify ID */}
+        {user && (needsProfileCompletion || needsIdVerification) && !showProfileForm && !showIDVerification && (
+          <ProfileVerificationCard
+            userRole="tenant"
+            onCompleteProfile={handleCompleteProfile}
+            onVerifyIdentity={handleVerifyIdentity}
+          />
+        )}
+
         {user && showProfileForm && (
           <TenantProfileForm
             userId={user.uid}
-            initialData={profile || undefined}
+            initialData={profile && profile.role === 'tenant' ? profile : undefined}
             onComplete={handleProfileComplete}
           />
         )}
 
-        {user && profileComplete && showIDVerification && !showProfileForm && (
+        {user && showIDVerification && (
           <IDVerificationPrompt
             userId={user.uid}
             userType="tenant"
             onComplete={handleIDVerificationComplete}
-            onSkip={handleIDVerificationSkip}
+            onSkip={() => setShowIDVerification(false)}
           />
         )}
 
-        {user && profileComplete && !showProfileForm && !showIDVerification && (
-          <>
-            {profile?.idVerificationStatus === 'verified' && (
-              <Card className="border-green-500/50 bg-green-50/10">
-                <CardContent className="pt-6">
-                  <div className="flex items-center gap-3 text-green-600">
-                    <CheckCircle className="h-6 w-6" />
-                    <p className="font-semibold">Your profile is complete and verified!</p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Properties</CardTitle>
-                <CardDescription>
-                  Start browsing and liking properties
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-12">
-                  <Heart className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
-                  <p className="text-muted-foreground mb-4">
-                    No properties yet
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Properties will appear here for you to browse and like
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </>
-        )}
-
-        {user && !profileComplete && !showProfileForm && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Properties</CardTitle>
-              <CardDescription>
-                Complete your profile to start browsing properties
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-12">
-                <Heart className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
-                <p className="text-muted-foreground mb-4">
-                  Complete your profile to get started
-                </p>
+        {user && isIdVerified && !showProfileForm && !showIDVerification && (
+          <Card className="border-green-500/50 bg-green-50/10">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-3 text-green-600">
+                <CheckCircle className="h-6 w-6" />
+                <p className="font-semibold">Your profile is complete and verified!</p>
               </div>
             </CardContent>
           </Card>
         )}
+
+        {/* Quick Search - Always show for authenticated users */}
+        {user && !showProfileForm && !showIDVerification && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Find Your Perfect Rental</CardTitle>
+              <CardDescription>
+                Search thousands of properties in Bucharest and beyond
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link href="/tenant/search">
+                <Button size="lg" className="w-full">
+                  <Search className="mr-2 h-5 w-5" />
+                  Start Searching Properties
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Quick Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-2xl font-bold">500+</p>
+                  <p className="text-sm text-muted-foreground">Available Properties</p>
+                </div>
+                <Home className="h-8 w-8 text-muted-foreground" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-2xl font-bold">€450</p>
+                  <p className="text-sm text-muted-foreground">Average Price</p>
+                </div>
+                <Euro className="h-8 w-8 text-muted-foreground" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-2xl font-bold">24h</p>
+                  <p className="text-sm text-muted-foreground">Average Response</p>
+                </div>
+                <Clock className="h-8 w-8 text-muted-foreground" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   )

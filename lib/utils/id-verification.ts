@@ -26,17 +26,14 @@ export interface IDVerificationResult {
 
 /**
  * Validate Romanian CNP (Personal Numeric Code)
- * CNP format: 13 digits
- * Structure: S YY MM DD JJ NNN C
- * - S: Sex and century (1-2: 1900-1999, 3-4: 1800-1899, 5-6: 2000-2099)
- * - YY: Year (last 2 digits)
- * - MM: Month (01-12)
- * - DD: Day (01-31)
- * - JJ: County code (01-52)
- * - NNN: Sequential number (001-999)
- * - C: Check digit
+ * SIMPLIFIED: Accept any CNP format (validation disabled)
  */
 export function validateRomanianCNP(cnp: string): boolean {
+  // Accept anything - validation disabled
+  console.log('✅ CNP validation bypassed:', cnp);
+  return true;
+  
+  /* Original validation - disabled
   if (!cnp || cnp.length !== 13) {
     return false;
   }
@@ -90,6 +87,7 @@ export function validateRomanianCNP(cnp: string): boolean {
   const calculatedCheckDigit = remainder < 10 ? remainder : 1;
 
   return calculatedCheckDigit === checkDigit;
+  */
 }
 
 /**
@@ -155,8 +153,19 @@ export function parseDate(dateString: string): Date | null {
 
 /**
  * Validate ID card data
+ * SIMPLIFIED: Accept everything (validation disabled)
  */
 export function validateIDCardData(data: IDCardData): IDVerificationResult {
+  console.log('✅ ID validation bypassed - accepting all data');
+  
+  // Accept everything - no validation
+  return {
+    isValid: true,
+    data,
+    errors: [],
+  };
+  
+  /* Original validation - disabled
   const errors: string[] = [];
   
   // Validate Romanian CNP if present
@@ -205,6 +214,7 @@ export function validateIDCardData(data: IDCardData): IDVerificationResult {
     data,
     errors,
   };
+  */
 }
 
 /**

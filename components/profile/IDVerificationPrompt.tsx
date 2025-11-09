@@ -14,6 +14,7 @@ interface IDVerificationPromptProps {
   userType: 'tenant' | 'landlord'
   onComplete?: () => void
   onSkip?: () => void
+  isOptional?: boolean
 }
 
 export function IDVerificationPrompt({
@@ -21,6 +22,7 @@ export function IDVerificationPrompt({
   userType,
   onComplete,
   onSkip,
+  isOptional = false,
 }: IDVerificationPromptProps) {
   const [showUpload, setShowUpload] = useState(false)
   const [verificationStatus, setVerificationStatus] = useState<'pending' | 'verified' | null>(null)
@@ -59,6 +61,18 @@ export function IDVerificationPrompt({
   }
 
   if (verificationStatus === 'verified') {
+    const CompactSuccess = (
+      <div className="flex items-center gap-3 text-green-600 p-4 bg-green-50/50 rounded-lg border border-green-200">
+        <CheckCircle className="h-5 w-5" />
+        <div>
+          <p className="font-medium text-sm">ID Verified</p>
+          <p className="text-xs text-muted-foreground">Your identity has been verified</p>
+        </div>
+      </div>
+    )
+
+    if (isOptional) return CompactSuccess
+
     return (
       <Card className="border-green-500/50 bg-green-50/10">
         <CardContent className="pt-6">
@@ -77,6 +91,35 @@ export function IDVerificationPrompt({
   }
 
   if (showUpload) {
+    const CompactUpload = (
+      <div className="space-y-4 p-4 bg-blue-50/50 rounded-lg border border-blue-200">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="font-medium text-sm">Identity Verification Process</p>
+            <p className="text-xs text-muted-foreground">Step 1: Upload ID Card (CI/Buletin) → Step 2: Take a selfie</p>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setShowUpload(false)
+              if (onSkip) onSkip()
+            }}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+        <IDCardUpload
+          userId={userId}
+          userType={userType}
+          onVerificationComplete={handleVerificationComplete}
+          onVerificationError={(error) => console.error('Verification error:', error)}
+        />
+      </div>
+    )
+
+    if (isOptional) return CompactUpload
+
     return (
       <Card>
         <CardHeader>
@@ -108,15 +151,36 @@ export function IDVerificationPrompt({
     )
   }
 
+  const CompactPrompt = (
+    <div className="flex items-center justify-between p-4 bg-blue-50/50 rounded-lg border border-blue-200">
+      <div className="flex items-center gap-3">
+        <Shield className="h-5 w-5 text-blue-600" />
+        <div>
+          <p className="font-medium text-sm">Start Verification</p>
+          <p className="text-xs text-muted-foreground">Let's validate you are a real person</p>
+        </div>
+      </div>
+      <Button
+        size="sm"
+        onClick={() => setShowUpload(true)}
+      >
+        <Shield className="mr-2 h-4 w-4" />
+        Start Verification
+      </Button>
+    </div>
+  )
+
+  if (isOptional) return CompactPrompt
+
   return (
     <Card className="border-blue-500/50 bg-blue-50/10">
       <CardHeader>
         <div className="flex items-center gap-3">
           <Shield className="h-6 w-6 text-blue-600" />
           <div>
-            <CardTitle>Verify Your Identity (Optional)</CardTitle>
+            <CardTitle>Start Verification</CardTitle>
             <CardDescription>
-              Verify your ID to build trust and access all platform features
+              Let's validate you are a real person. Upload your ID card and take a selfie.
             </CardDescription>
           </div>
         </div>
@@ -127,7 +191,7 @@ export function IDVerificationPrompt({
           className="flex-1"
         >
           <Shield className="mr-2 h-4 w-4" />
-          Verify ID
+          Start Verification
         </Button>
         <Button
           variant="outline"

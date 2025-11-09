@@ -337,7 +337,7 @@ export default function Home() {
               transition={{ delay: 0.2, duration: 0.6 }}
               className="text-lg sm:text-xl lg:text-2xl text-gray-300 leading-relaxed px-4"
             >
-              Rently is a transparent platform where you can see who you obtain the rent from and who comes to you for rent. 
+              RentHub is a transparent platform where you can see who you obtain the rent from and who comes to you for rent. 
               <span className="text-white font-semibold"> No hidden identities. No surprises.</span>
             </motion.p>
           </motion.div>

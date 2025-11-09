@@ -101,7 +101,7 @@ export default function SelectRolePage() {
   }
 
   // If user is not authenticated, redirect to sign in
-  if (!user && !loading) {
+  if (!user && !isLoading) {
     return (
       <main className="min-h-screen flex flex-col items-center justify-center p-8 bg-gradient-to-br from-primary/5 via-background to-background">
         <Card className="w-full max-w-md">
@@ -134,7 +134,7 @@ export default function SelectRolePage() {
         <div>
           <h1 className="text-5xl font-bold mb-4">Choose Your Role</h1>
           <p className="text-xl text-muted-foreground">
-            Select how you want to use Rently
+            Select how you want to use RentHub
           </p>
         </div>
 

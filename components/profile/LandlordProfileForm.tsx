@@ -8,8 +8,9 @@ import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loader2, User, Mail, FileText } from 'lucide-react'
 import { LandlordProfile } from '@/lib/firebase/users'
-import { doc, updateDoc, serverTimestamp } from 'firebase/firestore'
+import { doc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase/config'
+import { IDVerificationPrompt } from './IDVerificationPrompt'
 
 interface LandlordProfileFormProps {
   userId: string
@@ -19,9 +20,10 @@ interface LandlordProfileFormProps {
 
 export function LandlordProfileForm({ userId, initialData, onComplete }: LandlordProfileFormProps) {
   const [formData, setFormData] = useState({
-    fullName: initialData?.fullName || initialData?.name || '',
-    contactEmail: initialData?.contactEmail || initialData?.email || '',
+    name: initialData?.name || '',
+    age: initialData?.age || '',
     description: initialData?.description || '',
+    partnerAgencies: initialData?.partnerAgencies || '',
   })
 
   const [isLoading, setIsLoading] = useState(false)
@@ -34,23 +36,30 @@ export function LandlordProfileForm({ userId, initialData, onComplete }: Landlor
 
     try {
       const profileData = {
-        fullName: formData.fullName,
-        contactEmail: formData.contactEmail,
+        name: formData.name,
+        age: parseInt(formData.age.toString()),
         description: formData.description,
-        profileComplete: true,
+        partnerAgencies: formData.partnerAgencies,
+        role: 'landlord',
+        email: initialData?.email || '',
+        profileCompleted: true,
         updatedAt: serverTimestamp(),
       }
 
-      const profileRef = doc(db, 'landlordProfiles', userId)
-      await updateDoc(profileRef, profileData)
+      // Save to landlordProfiles collection (use setDoc with merge)
+      const landlordProfileRef = doc(db, 'landlordProfiles', userId)
+      await setDoc(landlordProfileRef, profileData, { merge: true })
 
-      // Update user document
+      // Update users collection with basic info
       const userRef = doc(db, 'users', userId)
-      await updateDoc(userRef, {
-        fullName: formData.fullName,
+      await setDoc(userRef, {
+        name: formData.name,
+        role: 'landlord',
+        profileCompleted: true,
         updatedAt: serverTimestamp(),
-      })
+      }, { merge: true })
 
+      console.log('✅ Landlord profile saved successfully')
       onComplete()
     } catch (error: any) {
       console.error('Error updating profile:', error)
@@ -70,33 +79,32 @@ export function LandlordProfileForm({ userId, initialData, onComplete }: Landlor
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="fullName">Full Name *</Label>
-            <div className="relative">
-              <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-              <Input
-                id="fullName"
-                type="text"
-                placeholder="John Doe"
-                value={formData.fullName}
-                onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                className="pl-10"
-                required
-              />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Full Name *</Label>
+              <div className="relative">
+                <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input
+                  id="name"
+                  type="text"
+                  placeholder="John Doe"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="pl-10"
+                  required
+                />
+              </div>
             </div>
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="contactEmail">Contact Email *</Label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <div className="space-y-2">
+              <Label htmlFor="age">Age *</Label>
               <Input
-                id="contactEmail"
-                type="email"
-                placeholder="contact@example.com"
-                value={formData.contactEmail}
-                onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })}
-                className="pl-10"
+                id="age"
+                type="number"
+                placeholder="35"
+                min="18"
+                value={formData.age}
+                onChange={(e) => setFormData({ ...formData, age: e.target.value })}
                 required
               />
             </div>
@@ -104,20 +112,46 @@ export function LandlordProfileForm({ userId, initialData, onComplete }: Landlor
 
           <div className="space-y-2">
             <Label htmlFor="description">Description *</Label>
-            <div className="relative">
-              <FileText className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-              <Textarea
-                id="description"
-                placeholder="Tell tenants about yourself and your properties..."
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="pl-10 min-h-[120px]"
-                required
-              />
-            </div>
+            <Textarea
+              id="description"
+              placeholder="Tell tenants about yourself, your experience as a landlord, and your properties..."
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              rows={4}
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="partnerAgencies">Partner Agencies</Label>
+            <Input
+              id="partnerAgencies"
+              type="text"
+              placeholder="e.g., RE/MAX, Century 21, Coldwell Banker (optional)"
+              value={formData.partnerAgencies}
+              onChange={(e) => setFormData({ ...formData, partnerAgencies: e.target.value })}
+            />
             <p className="text-xs text-muted-foreground">
-              Describe your properties and what kind of tenants you're looking for
+              List any real estate agencies you work with (optional)
             </p>
+          </div>
+
+          <div className="space-y-4 border-t pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-medium">Start Verification</h3>
+                <p className="text-sm text-muted-foreground">
+                  Let's validate you are a real person
+                </p>
+              </div>
+            </div>
+            <IDVerificationPrompt 
+              userId={userId} 
+              userType="landlord" 
+              isOptional={true}
+              onComplete={() => {}}
+              onSkip={() => {}}
+            />
           </div>
 
           {error && (
@@ -137,7 +171,7 @@ export function LandlordProfileForm({ userId, initialData, onComplete }: Landlor
                 Saving...
               </>
             ) : (
-              'Complete Profile'
+              'Complete Landlord Profile'
             )}
           </Button>
         </form>

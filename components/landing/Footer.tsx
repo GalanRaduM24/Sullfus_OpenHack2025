@@ -11,13 +11,13 @@ export default function Footer() {
               <div className="relative w-[50px] h-[50px]">
                 <Image
                   src="/assets/Icon.svg"
-                  alt="Rently Logo"
+                  alt="RentHub Logo"
                   fill
                   className="object-contain scale-150"
                   style={{ filter: 'brightness(0) saturate(100%) invert(35%) sepia(67%) saturate(1000%) hue-rotate(180deg) brightness(95%) contrast(85%)' }}
                 />
               </div>
-              <span className="font-bold text-base sm:text-lg text-white">Rently</span>
+              <span className="font-bold text-base sm:text-lg text-white">RentHub</span>
             </div>
             <p className="text-xs sm:text-sm text-gray-400 leading-relaxed max-w-xs">
               The simple way to connect tenants and landlords. No brokers, no BS.
@@ -68,7 +68,7 @@ export default function Footer() {
         </div>
         
         <div className="mt-12 sm:mt-16 pt-6 sm:pt-8 border-t border-gray-900 text-center text-xs sm:text-sm text-gray-500">
-          <p>© {new Date().getFullYear()} Rently. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} RentHub. All rights reserved.</p>
         </div>
       </div>
     </footer>

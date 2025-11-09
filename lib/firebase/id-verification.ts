@@ -71,8 +71,14 @@ export async function verifyAndStoreIDCard(
   imageFile: File
 ): Promise<IDVerificationResponse> {
   try {
-    // Upload image first
-    const uploadResult = await uploadIDCardImage(userId, userType, imageFile);
+    // Debug: Import debug function
+    const { debugUploadIDCard } = await import('./storage-debug');
+    
+    // Upload image first with debug logging
+    const uploadResult = await debugUploadIDCard(userId, userType, imageFile);
+    
+    // Log debug info
+    console.log('🔍 [Debug] Upload result:', uploadResult);
     
     if (!uploadResult.success || !uploadResult.imageUrl) {
       return { 
@@ -87,36 +93,51 @@ export async function verifyAndStoreIDCard(
     
     // Create document in Firestore
     const verificationId = `id_${userId}_${Date.now()}`;
-    const idCardDoc: IDCardDocument = {
+    
+    // Build the document data, excluding undefined fields
+    const idCardDocData: any = {
       userId,
       userType,
       imageUrl: uploadResult.imageUrl,
       verificationStatus: verificationResult.success ? 'verified' : 'pending',
-      data: verificationResult.data,
-      errors: verificationResult.errors,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    
-    if (verificationResult.success) {
-      idCardDoc.verifiedAt = new Date();
-    }
-    
-    // Save to Firestore
-    const docRef = doc(db, 'idVerifications', verificationId);
-    await setDoc(docRef, {
-      ...idCardDoc,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
-    });
+    };
+    
+    // Only add data field if it exists
+    if (verificationResult.data) {
+      idCardDocData.data = verificationResult.data;
+    }
+    
+    // Only add errors if they exist
+    if (verificationResult.errors && verificationResult.errors.length > 0) {
+      idCardDocData.errors = verificationResult.errors;
+    }
+    
+    // Add verified timestamp if successful
+    if (verificationResult.success) {
+      idCardDocData.verifiedAt = serverTimestamp();
+    }
+    
+    // Save to Firestore (use id_verifications collection)
+    const docRef = doc(db, 'id_verifications', verificationId);
+    await setDoc(docRef, idCardDocData);
     
     // Update user profile with verification status
     const userRef = doc(db, `${userType}Profiles`, userId);
-    await updateDoc(userRef, {
+    await setDoc(userRef, {
       idVerificationStatus: verificationResult.success ? 'verified' : 'pending',
       idVerificationId: verificationId,
       updatedAt: serverTimestamp(),
-    });
+    }, { merge: true });
+    
+    // Also update users collection
+    const mainUserRef = doc(db, 'users', userId);
+    await setDoc(mainUserRef, {
+      idVerificationStatus: verificationResult.success ? 'verified' : 'pending',
+      idVerificationId: verificationId,
+      updatedAt: serverTimestamp(),
+    }, { merge: true });
     
     return {
       success: verificationResult.success,
@@ -136,41 +157,61 @@ export async function verifyAndStoreIDCard(
 
 /**
  * Get ID card verification status
+ * Fixed: Search in id_verifications collection and check users collection
  */
 export async function getIDVerificationStatus(
   userId: string
 ): Promise<IDCardDocument | null> {
   try {
-    // Get user profile to find verification ID
-    const tenantRef = doc(db, 'tenantProfiles', userId);
-    const landlordRef = doc(db, 'landlordProfiles', userId);
+    // First, check the users collection for idVerificationId
+    const userRef = doc(db, 'users', userId);
+    const userSnap = await getDoc(userRef);
     
-    const [tenantSnap, landlordSnap] = await Promise.all([
-      getDoc(tenantRef),
-      getDoc(landlordRef),
-    ]);
-    
-    const userProfile = tenantSnap.exists() ? tenantSnap.data() : landlordSnap.exists() ? landlordSnap.data() : null;
-    
-    if (!userProfile?.idVerificationId) {
-      return null;
+    if (userSnap.exists()) {
+      const userData = userSnap.data();
+      
+      // If user has a verification ID, get that specific document
+      if (userData.idVerificationId) {
+        const verificationRef = doc(db, 'id_verifications', userData.idVerificationId);
+        const verificationSnap = await getDoc(verificationRef);
+        
+        if (verificationSnap.exists()) {
+          const data = verificationSnap.data();
+          return {
+            ...data,
+            createdAt: data.createdAt?.toDate() || new Date(),
+            updatedAt: data.updatedAt?.toDate() || new Date(),
+            verifiedAt: data.verifiedAt?.toDate(),
+          } as IDCardDocument;
+        }
+      }
     }
     
-    // Get verification document
-    const verificationRef = doc(db, 'idVerifications', userProfile.idVerificationId);
-    const verificationSnap = await getDoc(verificationRef);
+    // Fallback: Search for any verification document by userId
+    // This handles cases where idVerificationId wasn't set on user document
+    const { collection: firestoreCollection, query, where, orderBy, limit, getDocs } = await import('firebase/firestore');
     
-    if (!verificationSnap.exists()) {
-      return null;
+    const verificationsRef = firestoreCollection(db, 'id_verifications');
+    const q = query(
+      verificationsRef,
+      where('userId', '==', userId),
+      orderBy('createdAt', 'desc'),
+      limit(1)
+    );
+    
+    const querySnapshot = await getDocs(q);
+    
+    if (!querySnapshot.empty) {
+      const data = querySnapshot.docs[0].data();
+      return {
+        ...data,
+        createdAt: data.createdAt?.toDate() || new Date(),
+        updatedAt: data.updatedAt?.toDate() || new Date(),
+        verifiedAt: data.verifiedAt?.toDate(),
+      } as IDCardDocument;
     }
     
-    const data = verificationSnap.data();
-    return {
-      ...data,
-      createdAt: data.createdAt?.toDate() || new Date(),
-      updatedAt: data.updatedAt?.toDate() || new Date(),
-      verifiedAt: data.verifiedAt?.toDate(),
-    } as IDCardDocument;
+    return null;
   } catch (error) {
     console.error('Error getting verification status:', error);
     return null;

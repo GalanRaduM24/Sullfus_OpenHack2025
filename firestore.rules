@@ -1,0 +1,167 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check if user owns the document
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Helper function to check if profile is complete
+    function isProfileComplete(userId) {
+      return isAuthenticated() && 
+             get(/databases/$(database)/documents/users/$(userId)).data.profileCompleted == true;
+    }
+    
+    // Helper function to check if ID is verified
+    function isIdVerified(userId) {
+      return isAuthenticated() && 
+             get(/databases/$(database)/documents/users/$(userId)).data.idVerificationStatus == 'verified';
+    }
+    
+    // Users collection - main user profiles
+    match /users/{userId} {
+      // Anyone can read user profiles (for landlord/tenant browsing)
+      allow read: if true;
+      
+      // Users can only create/update their own profile
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
+      
+      // Only the user can delete their profile
+      allow delete: if isOwner(userId);
+    }
+    
+    // Tenant profiles
+    match /tenantProfiles/{userId} {
+      // Anyone authenticated can read tenant profiles
+      allow read: if isAuthenticated();
+      
+      // Users can only create/update their own profile
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
+      
+      // Only the user can delete their profile
+      allow delete: if isOwner(userId);
+    }
+    
+    // Landlord profiles
+    match /landlordProfiles/{userId} {
+      // Anyone authenticated can read landlord profiles
+      allow read: if isAuthenticated();
+      
+      // Users can only create/update their own profile
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
+      
+      // Only the user can delete their profile
+      allow delete: if isOwner(userId);
+    }
+    
+    // Property listings
+    match /listings/{listingId} {
+      // Anyone can read listings
+      allow read: if true;
+      
+      // Only verified landlords can create listings
+      allow create: if isAuthenticated() && 
+                      isIdVerified(request.auth.uid) &&
+                      request.resource.data.landlordId == request.auth.uid;
+      
+      // Only the landlord who created the listing can update it
+      allow update: if isAuthenticated() && 
+                      resource.data.landlordId == request.auth.uid;
+      
+      // Only the landlord who created the listing can delete it
+      allow delete: if isAuthenticated() && 
+                      resource.data.landlordId == request.auth.uid;
+    }
+    
+    // Matches (likes/interests)
+    match /matches/{matchId} {
+      // Users can read matches they're part of
+      allow read: if isAuthenticated() && 
+                    (resource.data.tenantId == request.auth.uid || 
+                     resource.data.landlordId == request.auth.uid);
+      
+      // Users can create matches
+      allow create: if isAuthenticated() &&
+                      (request.resource.data.tenantId == request.auth.uid || 
+                       request.resource.data.landlordId == request.auth.uid);
+      
+      // Users can update matches they're part of
+      allow update: if isAuthenticated() &&
+                      (resource.data.tenantId == request.auth.uid || 
+                       resource.data.landlordId == request.auth.uid);
+      
+      // Users can delete matches they're part of
+      allow delete: if isAuthenticated() &&
+                      (resource.data.tenantId == request.auth.uid || 
+                       resource.data.landlordId == request.auth.uid);
+    }
+    
+    // Chat messages
+    match /chats/{matchId}/messages/{messageId} {
+      // Users can read messages for matches they're part of
+      allow read: if isAuthenticated() && 
+                    (get(/databases/$(database)/documents/matches/$(matchId)).data.tenantId == request.auth.uid || 
+                     get(/databases/$(database)/documents/matches/$(matchId)).data.landlordId == request.auth.uid);
+      
+      // Users can create messages for matches they're part of
+      allow create: if isAuthenticated() &&
+                      (get(/databases/$(database)/documents/matches/$(matchId)).data.tenantId == request.auth.uid || 
+                       get(/databases/$(database)/documents/matches/$(matchId)).data.landlordId == request.auth.uid) &&
+                      request.resource.data.senderId == request.auth.uid;
+      
+      // Users cannot update or delete messages
+      allow update, delete: if false;
+    }
+    
+    // ID Verifications (with underscore)
+    match /id_verifications/{verificationId} {
+      // Users can only read their own ID verification
+      allow read: if isAuthenticated() && 
+                    resource.data.userId == request.auth.uid;
+      
+      // Users can create their own ID verification
+      allow create: if isAuthenticated() && 
+                      request.resource.data.userId == request.auth.uid;
+      
+      // Users can update their own ID verification (for resubmission)
+      allow update: if isAuthenticated() && 
+                      resource.data.userId == request.auth.uid;
+      
+      // Users cannot delete ID verifications (for audit trail)
+      allow delete: if false;
+    }
+    
+    // ID Verifications (without underscore - legacy support)
+    match /idVerifications/{verificationId} {
+      // Users can only read their own ID verification
+      allow read: if isAuthenticated() && 
+                    resource.data.userId == request.auth.uid;
+      
+      // Users can create their own ID verification
+      allow create: if isAuthenticated() && 
+                      request.resource.data.userId == request.auth.uid;
+      
+      // Users can update their own ID verification (for resubmission)
+      allow update: if isAuthenticated() && 
+                      resource.data.userId == request.auth.uid;
+      
+      // Users cannot delete ID verifications (for audit trail)
+      allow delete: if false;
+    }
+    
+    // Default deny all other collections
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
