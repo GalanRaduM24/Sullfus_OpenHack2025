@@ -52,15 +52,15 @@ export function LandlordScoreCard({ profileData }: LandlordScoreCardProps) {
 
   if (loading) {
     return (
-      <Card>
+      <Card className="border border-gray-800 bg-gray-900">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-white">
             <Award className="h-5 w-5" />
-            Landlord Score
+            Your Score
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">Calculating your score...</p>
+          <p className="text-gray-400">Calculating...</p>
         </CardContent>
       </Card>
     )
@@ -71,134 +71,88 @@ export function LandlordScoreCard({ profileData }: LandlordScoreCardProps) {
   const badgeInfo = getBadgeInfo(score.badge)
 
   return (
-    <Card className="border-2">
+    <Card className="border border-gray-800 bg-gray-900">
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
-            <CardTitle className="flex items-center gap-2">
-              <Award className="h-5 w-5 text-amber-500" />
-              Landlord Score
+            <CardTitle className="text-white text-xl">
+              Your Landlord Score
             </CardTitle>
-            <CardDescription>
-              Your profile quality and reputation score
+            <CardDescription className="text-gray-400">
+              Profile quality and reputation
             </CardDescription>
           </div>
-          <div className="flex flex-col items-end gap-2">
-            <Badge className={`${badgeInfo.color} text-white text-lg px-4 py-2`}>
-              {badgeInfo.icon} {badgeInfo.label}
+          <div className="flex items-center gap-4">
+            <Badge className={`${badgeInfo.color} text-white`}>
+              {badgeInfo.label}
             </Badge>
-            <div className="text-3xl font-bold text-primary">
+            <div className="text-3xl font-bold text-white">
               {score.total}
-              <span className="text-lg text-muted-foreground">/{score.maxPossible}</span>
+              <span className="text-lg text-gray-500">/{score.maxPossible}</span>
             </div>
           </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Overall Progress */}
+        {/* Progress Bar */}
         <div className="space-y-2">
-          <div className="flex justify-between text-sm">
-            <span className="font-medium">Overall Score</span>
-            <span className="text-muted-foreground">{score.percentage}%</span>
+          <div className="flex justify-between text-sm text-gray-400">
+            <span>Overall</span>
+            <span>{score.percentage}%</span>
           </div>
-          <Progress value={score.percentage} className="h-3" />
+          <Progress value={score.percentage} className="h-2" />
         </div>
 
-        {/* Score Breakdown */}
-        <div className="space-y-4">
-          <h4 className="font-semibold flex items-center gap-2">
-            <TrendingUp className="h-4 w-4" />
-            Score Breakdown
-          </h4>
-
-          {/* Profile Completion */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center gap-2">
-                <FileText className="h-4 w-4 text-blue-500" />
-                <span>Profile Completion</span>
-              </div>
-              <span className="font-medium">{score.breakdown.profileCompletion}/30</span>
+        {/* Breakdown Grid */}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <div className="flex items-center gap-2 text-sm text-gray-400 mb-1">
+              <FileText className="h-4 w-4" />
+              Profile
             </div>
-            <Progress value={(score.breakdown.profileCompletion / 30) * 100} className="h-2" />
-            <div className="flex flex-wrap gap-2 text-xs">
-              <StatusBadge checked={score.details.hasName} label="Name" />
-              <StatusBadge checked={score.details.hasAge} label="Age" />
-              <StatusBadge checked={score.details.hasDescription} label="Description" />
-            </div>
+            <p className="text-xl font-bold text-white">{score.breakdown.profileCompletion}/30</p>
+            <Progress value={(score.breakdown.profileCompletion / 30) * 100} className="h-1 mt-2" />
           </div>
 
-          {/* Description Quality */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center gap-2">
-                <Star className="h-4 w-4 text-yellow-500" />
-                <span>Description Quality</span>
-              </div>
-              <span className="font-medium">{score.breakdown.descriptionQuality}/20</span>
+          <div>
+            <div className="flex items-center gap-2 text-sm text-gray-400 mb-1">
+              <Star className="h-4 w-4" />
+              Quality
             </div>
-            <Progress value={(score.breakdown.descriptionQuality / 20) * 100} className="h-2" />
-            <div className="flex flex-wrap gap-2 text-xs">
-              <StatusBadge 
-                checked={score.details.descriptionIsQuality} 
-                label={score.details.descriptionIsQuality ? "Quality Content" : "Needs Improvement"} 
-              />
-            </div>
+            <p className="text-xl font-bold text-white">{score.breakdown.descriptionQuality}/20</p>
+            <Progress value={(score.breakdown.descriptionQuality / 20) * 100} className="h-1 mt-2" />
           </div>
 
-          {/* ID Verification */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center gap-2">
-                <Shield className="h-4 w-4 text-green-500" />
-                <span>ID Verification</span>
-              </div>
-              <span className="font-medium">{score.breakdown.idVerification}/30</span>
+          <div>
+            <div className="flex items-center gap-2 text-sm text-gray-400 mb-1">
+              <Shield className="h-4 w-4" />
+              ID Verified
             </div>
-            <Progress value={(score.breakdown.idVerification / 30) * 100} className="h-2" />
-            <div className="flex flex-wrap gap-2 text-xs">
-              <StatusBadge checked={score.details.hasIdCard} label="ID Submitted" />
-              <StatusBadge checked={score.details.idCardVerified} label="Verified" />
-            </div>
+            <p className="text-xl font-bold text-white">{score.breakdown.idVerification}/30</p>
+            <Progress value={(score.breakdown.idVerification / 30) * 100} className="h-1 mt-2" />
           </div>
 
-          {/* Property Quality */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center gap-2">
-                <Building className="h-4 w-4 text-purple-500" />
-                <span>Property Quality</span>
-              </div>
-              <span className="font-medium">{score.breakdown.propertyQuality}/20</span>
+          <div>
+            <div className="flex items-center gap-2 text-sm text-gray-400 mb-1">
+              <Building className="h-4 w-4" />
+              Properties
             </div>
-            <Progress value={(score.breakdown.propertyQuality / 20) * 100} className="h-2" />
-            <div className="flex flex-wrap gap-2 text-xs">
-              <StatusBadge 
-                checked={score.details.propertyCount > 0} 
-                label={`${score.details.propertyCount} Properties`} 
-              />
-              {score.details.propertyCount > 0 && (
-                <StatusBadge 
-                  checked={score.details.averagePropertyScore >= 70} 
-                  label={`Avg: ${score.details.averagePropertyScore}%`} 
-                />
-              )}
-            </div>
+            <p className="text-xl font-bold text-white">{score.breakdown.propertyQuality}/20</p>
+            <Progress value={(score.breakdown.propertyQuality / 20) * 100} className="h-1 mt-2" />
           </div>
         </div>
 
-        {/* Tips to improve */}
+        {/* Tips */}
         {score.percentage < 90 && (
-          <div className="bg-blue-50 p-4 rounded-lg space-y-2">
-            <h5 className="font-semibold text-sm text-blue-900">Tips to Improve Your Score:</h5>
-            <ul className="text-xs text-blue-800 space-y-1">
+          <div className="border border-gray-800 bg-gray-950 p-4 rounded-lg">
+            <h5 className="font-medium text-sm text-white mb-2">Improve Your Score</h5>
+            <ul className="text-xs text-gray-400 space-y-1">
               {!score.details.hasName && <li>• Complete your name</li>}
               {!score.details.hasAge && <li>• Add your age</li>}
-              {!score.details.hasDescription && <li>• Write a detailed description</li>}
-              {!score.details.descriptionIsQuality && <li>• Improve your description quality</li>}
-              {!score.details.idCardVerified && <li>• Verify your ID card</li>}
-              {score.details.propertyCount === 0 && <li>• Add your first property listing</li>}
-              {score.details.averagePropertyScore < 70 && <li>• Improve your property listings with more details</li>}
+              {!score.details.hasDescription && <li>• Write a description</li>}
+              {!score.details.descriptionIsQuality && <li>• Improve description quality</li>}
+              {!score.details.idCardVerified && <li>• Verify your ID</li>}
+              {score.details.propertyCount === 0 && <li>• Add your first property</li>}
             </ul>
           </div>
         )}
@@ -207,15 +161,4 @@ export function LandlordScoreCard({ profileData }: LandlordScoreCardProps) {
   )
 }
 
-function StatusBadge({ checked, label }: { checked: boolean; label: string }) {
-  return (
-    <Badge variant={checked ? "default" : "outline"} className="text-xs">
-      {checked ? (
-        <CheckCircle className="h-3 w-3 mr-1" />
-      ) : (
-        <XCircle className="h-3 w-3 mr-1" />
-      )}
-      {label}
-    </Badge>
-  )
-}
+
