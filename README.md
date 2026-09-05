@@ -1,198 +1,103 @@
-# Rently – Smart Rental Matching App
+# Rently: Smart Rental Matching & Automated Verification Platform
 
-A cross-platform rental matching application that helps tenants and landlords connect efficiently.
+[![Next.js](https://img.shields.io/badge/Frontend-Next.js%2014%20%7C%20React-black?logo=next.js&logoColor=white)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Firebase](https://img.shields.io/badge/Backend-Firebase%20Suite-FFCA28?logo=firebase&logoColor=black)](https://firebase.google.com/)
+[![AI](https://img.shields.io/badge/AI-Google%20Gemini%20Vision-4285F4?logo=google&logoColor=white)](https://ai.google.dev/)
+[![Tailwind CSS](https://img.shields.io/badge/Styling-TailwindCSS%20%2B%20shadcn%2Fui-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-## Tech Stack
+An intelligent, full-stack rental marketplace connecting tenants and property owners through real-time swipe matching, AI-powered identity verification with Romanian CNP checksum validation (Google Gemini Vision OCR), and integrated Google Maps geolocation discovery.
 
-- **Frontend**: Next.js 14 (React)
-- **UI Components**: shadcn/ui (Radix UI + Tailwind CSS)
-- **Icons**: Lucide React
-- **Backend**: Firebase (Auth, Firestore, Storage, Cloud Functions, Messaging)
-- **Maps**: Google Maps API & Google Places API
-- **AI**: Gemini API (Vision for ID verification, Chatbot & Video Analysis)
-- **Styling**: Tailwind CSS with CSS Variables
-- **Animations**: Framer Motion, Tailwind CSS Animate
+---
 
-## Features
+## Architecture Overview
 
-### ✅ Completed
-- [x] Next.js project setup with TypeScript
-- [x] shadcn/ui component library integration
-- [x] Tailwind CSS configuration with CSS variables
-- [x] Firebase configuration and setup
-- [x] Gemini API integration (Vision for ID verification)
-- [x] Google Maps API integration
-- [x] Dual interface structure (Tenant & Landlord)
-- [x] Role-based routing and layouts
-- [x] Shared Firebase functions
-- [x] Authentication system (Email/Password, Google Sign In)
-- [x] ID Card Verification (Romanian CNP validation)
-- [x] Modern navigation components
-- [x] Beautiful landing page with animations
-- [x] Sign up/Sign in pages with ID verification flow
+```text
+┌──────────────────────────────────────────────────────────────────────────┐
+│                             Client Web Layer                             │
+│  • Next.js 14 App Router, TypeScript, shadcn/ui & Framer Motion          │
+│  ┌─────────────────────────────┐    ┌──────────────────────────────────┐ │
+│  │ Tenant Portal (/tenant/*)   │    │ Landlord Portal (/landlord/*)    │ │
+│  │ • Swipe Matching Interface  │    │ • Property Listing Manager       │ │
+│  │ • Saved Matches & Profile   │    │ • Tenant Applicant Dashboard     │ │
+│  └─────────────────────────────┘    └──────────────────────────────────┘ │
+└────────────────────────────────────┬─────────────────────────────────────┘
+                                     │
+                                     ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│                   Unified Cloud Backend & Microservices                  │
+│  • Firebase Authentication (Email/Password & Google OAuth)               │
+│  • Cloud Firestore: Real-time listings, matches, and messaging channels  │
+│  • Firebase Cloud Storage: Encrypted document vault                      │
+└──────────────────┬────────────────────────────────────┬──────────────────┘
+                   │                                    │
+                   ▼                                    ▼
+┌──────────────────────────────────────┐   ┌───────────────────────────────┐
+│     Multimodal AI Vision Service     │   │      Geospatial Services      │
+│  • Gemini Vision OCR Extraction      │   │  • Google Maps JavaScript API │
+│  • Romanian ID / CNP Checksum Engine │   │  • Google Places Autocomplete │
+│  • Automated Age / Validity Checks   │   │  • Geocoding & Radius Filters │
+└──────────────────────────────────────┘   └───────────────────────────────┘
+```
 
-### 🚧 In Progress
-- [ ] Property Listings
-- [ ] Swipe/Matching System
-- [ ] Chat Functionality
-- [ ] Video Analysis
-- [ ] Push Notifications
+---
+
+## Core Capabilities
+
+| Capability | Technology | Description |
+|:---|:---|:---|
+| **Identity Verification** | Gemini Vision OCR, Custom RegEx | Validates government IDs with Romanian CNP algorithm verification and age (18+) verification. |
+| **Dual Role Topologies** | Next.js Role Routing | Tailored dashboards for tenants (swipe discovery, match queue) and landlords (listing manager, candidate applicant review). |
+| **Geospatial Discovery** | Google Maps & Places | Location-based property discovery, transit radius calculation, and interactive neighborhood explorer. |
+| **Real-Time Data Engine** | Cloud Firestore | Reactive state synchronization for active matches and instant peer-to-peer messaging. |
+
+---
+
+## Project Structure
+
+```text
+rently/
+├── app/                           # Next.js 14 App Router hierarchy
+│   ├── auth/                      # Authentication & sign-in / registration flows
+│   ├── tenant/                    # Tenant portal (swipe, matches, preferences)
+│   ├── landlord/                  # Landlord dashboard (listings, candidate review)
+│   └── select-role/               # Onboarding role selector
+├── components/                    # UI component library
+│   ├── ui/                        # shadcn/ui primitives
+│   ├── id-verification/           # ID upload & OCR feedback modal
+│   └── maps/                      # Google Maps integration widgets
+├── lib/
+│   ├── firebase/                  # Firestore collections, auth, and storage rules
+│   ├── gemini/                    # Gemini Vision prompt templates & parsers
+│   └── utils/                     # CNP checksum mathematical validator
+├── functions/                     # Firebase serverless Cloud Functions
+└── public/                        # Static brand assets
+```
+
+---
 
 ## Getting Started
 
 ### Prerequisites
+- Node.js 18+
+- Firebase project credentials
+- Google Gemini API Key
+- Google Maps API Key
 
-- Node.js 18+ installed
-- npm or yarn package manager
-- Firebase project (create one at [Firebase Console](https://console.firebase.google.com/))
-- Gemini API key (get from [Google AI Studio](https://makersuite.google.com/app/apikey))
-- Google Maps API key (get from [Google Cloud Console](https://console.cloud.google.com/))
-
-### Installation
-
-1. **Install dependencies:**
-   ```bash
-   npm install
-   ```
-
-2. **Set up environment variables:**
-   - Copy `.env.example` to `.env.local`
-   - Fill in your Firebase and API keys:
-   ```bash
-   cp .env.example .env.local
-   ```
-
-3. **Configure Firebase:**
-   - Go to Firebase Console > Project Settings
-   - Copy your config values to `.env.local`
-   - Enable Authentication (Email/Password and Google)
-   - Enable Firestore Database
-   - Enable Storage
-   - Set up security rules (see [SETUP_ID_VERIFICATION.md](./SETUP_ID_VERIFICATION.md))
-
-4. **Configure Google APIs:**
-   - **Gemini API**: Get key from [Google AI Studio](https://makersuite.google.com/app/apikey)
-   - **Google Maps**: Enable Maps JavaScript API, Places API, Geocoding API in [Google Cloud Console](https://console.cloud.google.com/)
-
-5. **Run the development server:**
-   ```bash
-   npm run dev
-   ```
-
-6. **Open your browser:**
-   - Navigate to [http://localhost:3000](http://localhost:3000)
-   - You should see the landing page! 🎉
-
-## Project Structure
-
-```
-rently/
-├── app/                           # Next.js app directory
-│   ├── layout.tsx                # Root layout
-│   ├── page.tsx                  # Landing page
-│   ├── auth/                     # Authentication pages
-│   │   ├── signin/               # Sign in page
-│   │   └── signup/               # Sign up page with ID verification
-│   ├── select-role/              # Role selection page
-│   ├── tenant/                   # Tenant interface
-│   │   ├── layout.tsx            # Tenant layout with nav
-│   │   ├── page.tsx              # Tenant dashboard
-│   │   ├── swipe/                # Property swipe interface
-│   │   ├── matches/              # Tenant matches
-│   │   └── profile/              # Tenant profile
-│   ├── landlord/                 # Landlord interface
-│   │   ├── layout.tsx            # Landlord layout with nav
-│   │   ├── page.tsx              # Landlord dashboard
-│   │   ├── listings/             # Property listings management
-│   │   ├── tenants/              # Interested tenants
-│   │   ├── matches/              # Landlord matches
-│   │   └── profile/              # Landlord profile
-│   └── globals.css               # Global styles
-├── components/                    # React components
-│   ├── ui/                       # shadcn/ui components
-│   ├── id-verification/          # ID card upload component
-│   ├── maps/                     # Google Maps components
-│   ├── landing/                  # Landing page components
-│   ├── tenant/                   # Tenant-specific components
-│   └── landlord/                 # Landlord-specific components
-├── lib/                           # Utility libraries
-│   ├── firebase/                 # Firebase functions
-│   │   ├── config.ts             # Firebase configuration
-│   │   ├── id-verification.ts    # ID verification functions
-│   │   ├── users.ts              # User management
-│   │   ├── listings.ts           # Property listings
-│   │   ├── matches.ts            # Matching system
-│   │   └── chat.ts               # Chat/messaging
-│   ├── gemini/                   # Gemini API
-│   │   └── vision.ts             # Vision API for ID cards
-│   ├── maps/                     # Google Maps utilities
-│   │   └── google-maps.ts        # Maps helper functions
-│   ├── services/                 # Service integrations
-│   │   └── id-verification.service.ts  # ID verification service
-│   └── utils/                    # Utility functions
-│       ├── id-verification.ts    # CNP validation utilities
-│       └── utils.ts              # General utilities
-├── public/                        # Static assets
-│   └── assets/                   # Images and icons
-└── .env.example                   # Environment variables template
-```
-
-## Dual Interface Architecture
-
-The app has **two separate interfaces** connected to the **same Firebase backend**:
-
-### 👤 Tenant Interface (`/tenant/*`)
-- **Dashboard**: Overview of tenant activity
-- **Swipe**: Browse and swipe on property listings
-- **Matches**: View mutual matches with landlords
-- **Profile**: Manage tenant profile and preferences
-
-### 🏢 Landlord Interface (`/landlord/*`)
-- **Dashboard**: Overview of landlord activity
-- **Listings**: Create and manage property listings
-- **Tenants**: View interested tenant profiles
-- **Matches**: View mutual matches with tenants
-- **Profile**: Manage landlord profile
-
-### 🔄 Shared Backend
-Both interfaces use the same Firebase backend:
-- **Firestore Collections**: `tenantProfiles`, `landlordProfiles`, `idVerifications`, `listings`, `matches`, `chats`
-- **Shared Functions**: All Firebase operations in `lib/firebase/`
-- **Role-based Access**: User roles determine interface access
-
-## ID Card Verification
-
-The app includes ID card verification for both tenants and landlords:
-- **Romanian ID Card Support**: Full CNP (Personal Numeric Code) validation
-- **Multi-Service OCR**: Gemini Vision API (primary), with fallback to Google Vision and PicToText
-- **Data Extraction**: Name, date of birth, CNP, ID number, expiry date, nationality
-- **Validation**: Age verification (18+), expiry date checking, CNP checksum validation
-- **Secure Storage**: ID cards stored in Firebase Storage with user-specific paths
-
-For detailed setup instructions, see [SETUP_ID_VERIFICATION.md](./SETUP_ID_VERIFICATION.md).
-
-## Development
+### 1. Installation
 
 ```bash
-# Development server
-npm run dev
-
-# Build for production
-npm run build
-
-# Start production server
-npm start
-
-# Lint code
-npm run lint
+git clone https://github.com/GalanRaduM24/Sullfus_OpenHack2025.git
+cd Sullfus_OpenHack2025
+npm install
 ```
 
-## Environment Variables
+### 2. Environment Setup
 
-Create a `.env.local` file with the following variables (see `.env.example`):
+Create `.env.local` based on `.env.example`:
 
 ```env
-# Firebase Configuration
 NEXT_PUBLIC_FIREBASE_API_KEY=your-api-key
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project-id
@@ -200,26 +105,13 @@ NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your-sender-id
 NEXT_PUBLIC_FIREBASE_APP_ID=your-app-id
 
-# Gemini API (Required for ID verification)
 NEXT_PUBLIC_GEMINI_API_KEY=your-gemini-key
-
-# Google Maps API (Required)
 NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your-maps-key
-
-# Optional: Fallback OCR services
-NEXT_PUBLIC_PICTOTEXT_API_KEY=your-pictotext-key
-NEXT_PUBLIC_GOOGLE_VISION_API_KEY=your-vision-key
 ```
 
-## Documentation
+### 3. Run Development Server
 
-- **[ARCHITECTURE.md](./ARCHITECTURE.md)**: System architecture and data flow
-- **[SETUP_ID_VERIFICATION.md](./SETUP_ID_VERIFICATION.md)**: Detailed ID verification setup guide
-
-## License
-
-Private project
-
----
-
-Built with ❤️ using Next.js and Firebase
+```bash
+npm run dev
+```
+Navigate to `http://localhost:3000`.
